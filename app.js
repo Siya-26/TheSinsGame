@@ -21,8 +21,9 @@ game.start();
 const animate = function () {
     requestAnimationFrame(animate);
     controls.update();
-    game.update(); // Call update method from Game class
+    game.update(); 
     renderer.render(scene, camera);
+    
 };
 
 animate();
