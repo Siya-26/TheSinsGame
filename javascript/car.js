@@ -1,10 +1,15 @@
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.module.js';
 
 export class Car {
+    
     constructor(scene) {
+
         this.scene = scene;
+
         this.model = this.createCarModel();
+
         this.scene.add(this.model);
+
     }
 
     createCarModel() {

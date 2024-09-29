@@ -10,6 +10,7 @@ document.body.appendChild(renderer.domElement);
 
 // Set up controls
 const controls = new OrbitControls(camera, renderer.domElement);
+
 camera.position.set(0, 5, 10);
 controls.update();
 
@@ -19,11 +20,11 @@ game.start();
 
 // Animation loop
 const animate = function () {
+
     requestAnimationFrame(animate);
     controls.update();
     game.update(); 
-    renderer.render(scene, camera);
-    
+    renderer.render(scene, camera);  
 };
 
 animate();
