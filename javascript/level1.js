@@ -1,72 +1,161 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
-import { strToU8 } from 'three/examples/jsm/libs/fflate.module.js';
-import { load } from 'three/examples/jsm/libs/opentype.module.js';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader.js';
+import * as CANNON from 'cannon-es';
+import CannonDebugger from 'cannon-es-debugger';
 
+// CONTROLS AND SETUP
 const moveSpeed = 0.2;
 const direction = { x: 0, y: 0, z: 0 };
+const maxSteerVal = Math.PI / 8;
+const maxForce = 10;
 
-const enableInputControls = () => {
+const enableInputControls = (vehicle) => {
     window.addEventListener('keydown', (event) => {
         switch (event.key) {
             case 'ArrowUp':
             case 'w':
-                direction.z = -moveSpeed;
+                vehicle.setWheelForce(maxForce, 0);
+                vehicle.setWheelForce(maxForce, 1);
                 break;
             case 'ArrowDown':
             case 's':
-                direction.z = moveSpeed;
+                vehicle.setWheelForce(-maxForce / 2, 0);
+                vehicle.setWheelForce(-maxForce / 2, 1);
                 break;
             case 'ArrowLeft':
             case 'a':
-                direction.x = -moveSpeed;
+                vehicle.setSteeringValue(maxSteerVal, 0);
+                vehicle.setSteeringValue(maxSteerVal, 1);
                 break;
             case 'ArrowRight':
             case 'd':
-                direction.x = moveSpeed;
+                vehicle.setSteeringValue(-maxSteerVal, 0);
+                vehicle.setSteeringValue(-maxSteerVal, 1);
                 break;
         }
     });
     
     window.addEventListener('keyup', (event) => {
         switch (event.key) {
-            case 'ArrowUp':
             case 'w':
-            case 'ArrowDown':
-            case 's':
-                direction.z = 0;
+            case 'ArrowUp':
+                vehicle.setWheelForce(0, 0);
+                vehicle.setWheelForce(0, 1);
                 break;
-            case 'ArrowLeft':
+            case 's':
+            case 'ArrowDown':
+                vehicle.setWheelForce(0, 0);
+                vehicle.setWheelForce(0, 1);
+                break;
             case 'a':
-            case 'ArrowRight':
+            case 'ArrowLeft':
+                vehicle.setSteeringValue(0, 0);
+                vehicle.setSteeringValue(0, 1);
+                break
             case 'd':
-                direction.x = 0;
+            case 'ArrowRight':
+                vehicle.setSteeringValue(0, 0);
+                vehicle.setSteeringValue(0, 1);
                 break;
         }
     });
+};
+
+
+// PHYSICS WORLD
+const physicsWorld = new CANNON.World({
+    gravity: new CANNON.Vec3(0, -9.82, 0),
+});
+
+const groundBody = new CANNON.Body({
+    type: CANNON.Body.STATIC,
+    shape: new CANNON.Plane(),
+});
+
+groundBody.quaternion.setFromEuler(-Math.PI / 2, 0, 0);
+physicsWorld.addBody(groundBody);
+
+const physicsCar = () => {
+    const carBody = new CANNON.Body({
+        mass: 10,
+        shape: new CANNON.Box(new CANNON.Vec3(1, 0.05, 0.5)),
+    });
+
+    const vehicle = new CANNON.RigidVehicle({
+        chassisBody: carBody,
+    });
+    
+    const axisWidth = 0.5;
+    const wheelBody1 = new CANNON.Body({
+        mass: 2,
+        material: new CANNON.Material('wheel'),
+    });
+    wheelBody1.addShape(new CANNON.Sphere(0.1));
+    wheelBody1.angularDamping = 0.4;
+    vehicle.addWheel({
+        body: wheelBody1,
+        position: new CANNON.Vec3(-1, 0, axisWidth / 1),
+        axis: new CANNON.Vec3(0, 0, 1),
+        direction: new CANNON.Vec3(0, -1, 0),
+    });
+
+    const wheelBody2 = new CANNON.Body({
+        mass: 2,
+        material: new CANNON.Material('wheel'),
+    });
+    wheelBody2.addShape(new CANNON.Sphere(0.1));
+    wheelBody2.angularDamping = 0.4;
+    vehicle.addWheel({
+        body: wheelBody2,
+        position: new CANNON.Vec3(-1, 0, -axisWidth / 1),
+        axis: new CANNON.Vec3(0, 0, 1),
+        direction: new CANNON.Vec3(0, -1, 0),
+    });
+
+    const wheelBody3 = new CANNON.Body({
+        mass: 2,
+        material: new CANNON.Material('wheel'),
+    });
+    wheelBody3.addShape(new CANNON.Sphere(0.1));
+    wheelBody3.angularDamping = 0.4;
+    vehicle.addWheel({
+        body: wheelBody3,
+        position: new CANNON.Vec3(1, 0, -axisWidth / 1),
+        axis: new CANNON.Vec3(0, 0, 1),
+        direction: new CANNON.Vec3(0, -1, 0),
+    });
+
+    const wheelBody4 = new CANNON.Body({
+        mass: 2,
+        material: new CANNON.Material('wheel'),
+    });
+    wheelBody4.addShape(new CANNON.Sphere(0.1));
+    wheelBody4.angularDamping = 0.4;
+    vehicle.addWheel({
+        body: wheelBody4,
+        position: new CANNON.Vec3(1, 0, axisWidth / 1),
+        axis: new CANNON.Vec3(0, 0, 1),
+        direction: new CANNON.Vec3(0, -1, 0),
+    });
+
+    return { vehicle, wheelBody1, wheelBody2, wheelBody4, wheelBody3 };
 }
 
+const {vehicle, wheelBody1, wheelBody2, wheelBody4, wheelBody3} = physicsCar();
+
+
+enableInputControls(vehicle);
+
+vehicle.addToWorld(physicsWorld);
+
+// GAME WORLD
 const thirdPersonView = {
     fieldOfView: 75,
     aspect: window.innerWidth / window.innerHeight,
     nearPlane: 0.1,
     farPlane: 100,
-};
-
-const buildCube = () => {
-    const box = new THREE.BoxGeometry(1, 1, 1);
-    const material = new THREE.MeshBasicMaterial({ color: 0xcccccc });
-    const wireframe_box = new THREE.BoxGeometry(1, 1, 1, 5, 5, 5);
-    const wireframe_material = new THREE.MeshBasicMaterial({
-        color: 0x000000,
-        wireframe: true
-    });
-    const wireframe = new THREE.Mesh(wireframe_box, wireframe_material);
-    const cube = new THREE.Mesh(box, material);
-    cube.add(wireframe);
-    cube.position.set(0, 0.6, 32);
-    return cube;
 };
 
 const buildPlane = () => {
@@ -84,36 +173,6 @@ const buildPlane = () => {
     plane.add(plane_wireframe)
     plane.rotation.x = -Math.PI / 2;
     return plane;
-};
-
-const buildRoad = () => {
-    const roadWidth = 8;
-    const roadLength = 64;
-    const geometry = new THREE.PlaneGeometry(roadWidth, roadLength);
-    const material = new THREE.MeshBasicMaterial({ 
-        color: 0x333333,
-        side: THREE.DoubleSide
-     });
-    const road = new THREE.Mesh(geometry, material);
-    return road;
-};
-
-const collision = (cube, obstacle) => {
-    const cubeBox = new THREE.Box3().setFromObject(cube);
-    const obstacleBox = new THREE.Box3().setFromObject(obstacle);
-    return cubeBox.intersectsBox(obstacleBox);
-};
-
-const buildObstacle = () => {
-    const plane = new THREE.PlaneGeometry(64, 5);
-    const material = new THREE.MeshBasicMaterial({
-        color: 0xFFFFFF,
-        transparent: true,
-        opacity: 0.0
-    });
-    const obstacle = new THREE.Mesh(plane, material);
-    obstacle.rotation.y = -Math.PI / 2;
-    return obstacle;
 };
 
 const loader = new FBXLoader();
@@ -136,6 +195,58 @@ const loadTrack = () => {
     });
 };
 
+const loadCarModel = (scene) => {
+    return new Promise((resolve, reject) => {
+        const loader = new GLTFLoader();
+        loader.load('../Models/mazda_rx7_stylised.glb', (gltf) => {
+            const car = gltf.scene;
+
+            // Scale the car down significantly
+            car.scale.set(0.0040, 0.0040, 0.0040);  // Scale car to 15% of its original size
+
+            // Position the car at the start of the track (z = 0)
+            car.position.set(0, 0.1, -10);  // Position the car at the beginning of the track
+            car.rotateY(47.2);
+
+            // Change car's color to white and enable wireframe mode
+            car.traverse((child) => {
+                if (child.isMesh) {
+                    child.material.color.set(0xffffff);  // Set all meshes to white
+                    child.material.wireframe = false;     // Enable wireframe mode
+                }
+            });
+
+            car.traverse((child) => {
+                if (child.isMesh) {
+                    child.material.color.set(0x000000);  // Set all meshes to white
+                }
+            });
+
+            // Optional: Set shadows if needed
+            car.castShadow = false;
+            car.receiveShadow = false;
+
+            // Rotate the car to face the road
+            car.rotation.y -= Math.PI / 2;
+
+            resolve(car);  // Resolve the promise with the loaded car
+        }, undefined, (error) => {
+            reject(error);  // Reject the promise if there's an error
+        });
+    });
+};
+
+const buildBox = () => {
+    const geo = new THREE.BoxGeometry(2, 0.1, 1);
+    const mat = new THREE.MeshBasicMaterial({
+        color: 0x00ff00,
+        transparent: true,
+        opacity: true
+    });
+    const box_mesh = new THREE.Mesh(geo, mat);
+    return box_mesh
+}
+
 const create3DEnvironment = async () => {
     const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
@@ -151,26 +262,35 @@ const create3DEnvironment = async () => {
     camera.position.set(0, 5, 10);
 
     const controls = new OrbitControls(camera, renderer.domElement);
-    controls.enableDamping = true; // an animation loop is required when either damping or auto-rotation are enabled
-    controls.dampingFactor = 0.25;
-    controls.screenSpacePanning = false; // Prevent panning to prevent disorienting movements
 
     const scene = new THREE.Scene();
     scene.background = new THREE.Color('0xFFFFFF');
 
     const plane = buildPlane();
-    scene.add(plane);
     const model = await loadTrack();
+    const car = await loadCarModel(scene);
+    const box = buildBox();
     const track = model.children[0].children[7];
+    track.scale.set(2, 2, 2);
     for(let i = 0; i < track.material.length; i++){
         track.material[i].emissive.set(0x07030A);
     }
-    console.log(track);
-    scene.add(track);
 
+    scene.add(plane);
+    scene.add(track);
+    scene.add(car);
+    //scene.add(box);
+
+    const cannonDebugger = new CannonDebugger(scene, physicsWorld, {
+        // color: 0xff0000
+    });
     const animate = () => {
-        requestAnimationFrame(animate);
-        controls.update(); // Update the controls on each frame
+        window.requestAnimationFrame(animate);
+        physicsWorld.fixedStep();
+        cannonDebugger.update();
+        car.position.copy(vehicle.chassisBody.position);
+        car.quaternion.copy(vehicle.chassisBody.quaternion);
+
         renderer.render(scene, camera);
     };
 
