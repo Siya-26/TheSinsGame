@@ -1,5 +1,8 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import { strToU8 } from 'three/examples/jsm/libs/fflate.module.js';
+import { load } from 'three/examples/jsm/libs/opentype.module.js';
+import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader.js';
 
 const moveSpeed = 0.2;
 const direction = { x: 0, y: 0, z: 0 };
@@ -43,7 +46,6 @@ const enableInputControls = () => {
         }
     });
 }
-
 
 const thirdPersonView = {
     fieldOfView: 75,
@@ -114,17 +116,27 @@ const buildObstacle = () => {
     return obstacle;
 };
 
-const buildTrack = () => {
-    const track = new THREE.Group();
-    const main = buildRoad();
-    const main_right = buildRoad();
-    track.add(main);
-    track.rotation.x = -Math.PI / 2;
-    track.position.y = 0.1;
-    return track;
-}
+const loader = new FBXLoader();
 
-const create3DEnvironment = () => {
+const loadTrack = () => {
+    return new Promise((resolve, reject) => {
+        loader.load(
+            '../Models/Formula_Track.fbx',
+            (fbx) => {
+                resolve(fbx);
+            },
+            (xhr) => {
+                console.log((xhr.loaded / xhr.total * 100) + '% loaded');
+            },
+            (error) => {
+                console.error('An error occurred:', error);
+                reject(error);
+            }
+        );
+    });
+};
+
+const create3DEnvironment = async () => {
     const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
     document.body.appendChild(renderer.domElement);
@@ -136,39 +148,34 @@ const create3DEnvironment = () => {
         thirdPersonView.farPlane
     );
 
+    camera.position.set(0, 5, 10);
+
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true; // an animation loop is required when either damping or auto-rotation are enabled
+    controls.dampingFactor = 0.25;
+    controls.screenSpacePanning = false; // Prevent panning to prevent disorienting movements
+
     const scene = new THREE.Scene();
     scene.background = new THREE.Color('0xFFFFFF');
 
     const plane = buildPlane();
-    const cube = buildCube();
-    const track = buildTrack();
-    
     scene.add(plane);
+    const model = await loadTrack();
+    const track = model.children[0].children[7];
+    for(let i = 0; i < track.material.length; i++){
+        track.material[i].emissive.set(0x07030A);
+    }
+    console.log(track);
     scene.add(track);
-    scene.add(cube);
-
-    camera.position.set(cube.position.x, cube.position.y + 2, cube.position.z + 3);
-
-    const controls = new OrbitControls(camera, renderer.domElement);
 
     const animate = () => {
         requestAnimationFrame(animate);
-
-
-        const oldPosition = cube.position.clone();
-
-
-        cube.position.x += direction.x;
-        cube.position.z += direction.z;
-
-
-        //camera.position.set(cube.position.x, cube.position.y + 2, cube.position.z + 3);
-        //camera.lookAt(cube.position);
-
+        controls.update(); // Update the controls on each frame
         renderer.render(scene, camera);
     };
 
     animate();
-}
+};
+
 
 create3DEnvironment();
