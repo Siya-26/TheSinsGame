@@ -10,6 +10,7 @@ const moveSpeed = 0.2;
 const direction = { x: 0, y: 0, z: 0 };
 const maxSteerVal = Math.PI / 8;
 const maxForce = 10;
+const frictionCoefficient = 0.1; // Coefficient of friction
 
 const enableInputControls = (vehicle) => {
     window.addEventListener('keydown', (event) => {
@@ -53,7 +54,7 @@ const enableInputControls = (vehicle) => {
             case 'ArrowLeft':
                 vehicle.setSteeringValue(0, 0);
                 vehicle.setSteeringValue(0, 1);
-                break
+                break;
             case 'd':
             case 'ArrowRight':
                 vehicle.setSteeringValue(0, 0);
@@ -62,7 +63,6 @@ const enableInputControls = (vehicle) => {
         }
     });
 };
-
 
 // PHYSICS WORLD
 const physicsWorld = new CANNON.World({
@@ -143,8 +143,7 @@ const physicsCar = () => {
     return { vehicle, wheelBody1, wheelBody2, wheelBody4, wheelBody3 };
 }
 
-const {vehicle, wheelBody1, wheelBody2, wheelBody4, wheelBody3} = physicsCar();
-
+const { vehicle, wheelBody1, wheelBody2, wheelBody4, wheelBody3 } = physicsCar();
 
 enableInputControls(vehicle);
 
@@ -170,7 +169,7 @@ const buildPlane = () => {
     });
     const plane_wireframe = new THREE.Mesh(wireframe_geo, wireframe_mat);
     const plane = new THREE.Mesh(geometry, material);
-    plane.add(plane_wireframe)
+    plane.add(plane_wireframe);
     plane.rotation.x = -Math.PI / 2;
     return plane;
 };
@@ -195,10 +194,10 @@ const loadTrack = () => {
     });
 };
 
-const loadCarModel = (scene) => {
+const loadCarModel = async (scene) => {
     return new Promise((resolve, reject) => {
         const loader = new GLTFLoader();
-        loader.load('../Models/mazda_rx7_stylised.glb', (gltf) => {
+        loader.load('../Models/mazda_rx7_stylised.glb', async (gltf) => {
             const car = gltf.scene;
 
             // Scale the car down significantly
@@ -208,23 +207,33 @@ const loadCarModel = (scene) => {
             car.position.set(0, 0.1, -10);  // Position the car at the beginning of the track
             car.rotateY(47.2);
 
-            // Change car's color to white and enable wireframe mode
+            // Option 1: Simple black material
+            const blackMaterial = new THREE.MeshStandardMaterial({ color: 0x000000 });
             car.traverse((child) => {
                 if (child.isMesh) {
-                    child.material.color.set(0xffffff);  // Set all meshes to white
-                    child.material.wireframe = false;     // Enable wireframe mode
+                    child.material = blackMaterial;  // Apply black material
                 }
             });
 
+            // Option 2: Load a texture (if you want a textured black material)
+            /*
+            const textureLoader = new THREE.TextureLoader();
+            const texture = textureLoader.load('path/to/your/texture.jpg', (texture) => {
+                texture.wrapS = THREE.RepeatWrapping;
+                texture.wrapT = THREE.RepeatWrapping;
+                texture.repeat.set(4, 4); // Adjust texture repetition
+            });
+            const texturedMaterial = new THREE.MeshStandardMaterial({ map: texture });
             car.traverse((child) => {
                 if (child.isMesh) {
-                    child.material.color.set(0x000000);  // Set all meshes to white
+                    child.material = texturedMaterial;  // Apply textured material
                 }
             });
+            */
 
             // Optional: Set shadows if needed
-            car.castShadow = false;
-            car.receiveShadow = false;
+            car.castShadow = true;
+            car.receiveShadow = true;
 
             // Rotate the car to face the road
             car.rotation.y -= Math.PI / 2;
@@ -244,8 +253,39 @@ const buildBox = () => {
         opacity: true
     });
     const box_mesh = new THREE.Mesh(geo, mat);
-    return box_mesh
+    return box_mesh;
 }
+
+const loadSkybox = () => {
+    return new Promise((resolve, reject) => {
+        const loader = new GLTFLoader();
+        loader.load('../skybox/skybox_skydays_3.glb',
+            (gltf) => {
+                const skybox = gltf.scene;
+
+                // Scale the skybox to ensure it fits well
+                skybox.scale.set(100, 100, 100); // Adjust scale as needed
+
+                // Position it at the origin
+                skybox.position.set(0, 0, 0);
+
+                // Set material if necessary
+                skybox.traverse((child) => {
+                    if (child.isMesh) {
+                        child.material.side = THREE.BackSide; // Ensure rendering from inside
+                    }
+                });
+
+                resolve(skybox);
+            },
+            undefined,
+            (error) => {
+                console.error('Error loading skybox:', error);
+                reject(error);
+            }
+        );
+    });
+};
 
 const create3DEnvironment = async () => {
     const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -264,26 +304,28 @@ const create3DEnvironment = async () => {
     const controls = new OrbitControls(camera, renderer.domElement);
 
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color('0xFFFFFF');
+    scene.background = new THREE.Color('0x000000');
 
     const plane = buildPlane();
     const model = await loadTrack();
     const car = await loadCarModel(scene);
-    const box = buildBox();
+    const skybox = await loadSkybox(); // Load the skybox
+
     const track = model.children[0].children[7];
     track.scale.set(2, 2, 2);
-    for(let i = 0; i < track.material.length; i++){
+    for (let i = 0; i < track.material.length; i++) {
         track.material[i].emissive.set(0x07030A);
     }
 
     scene.add(plane);
+    scene.add(skybox); // Add the skybox to the scene
     scene.add(track);
     scene.add(car);
-    //scene.add(box);
 
     const cannonDebugger = new CannonDebugger(scene, physicsWorld, {
         // color: 0xff0000
     });
+
     const animate = () => {
         window.requestAnimationFrame(animate);
         physicsWorld.fixedStep();
@@ -291,11 +333,22 @@ const create3DEnvironment = async () => {
         car.position.copy(vehicle.chassisBody.position);
         car.quaternion.copy(vehicle.chassisBody.quaternion);
 
+        // Apply friction when no forward key is pressed
+        if (!window.keyIsPressed) {
+            const velocity = vehicle.chassisBody.velocity;
+            velocity.x *= (1 - frictionCoefficient);
+            velocity.z *= (1 - frictionCoefficient);
+        }
+
         renderer.render(scene, camera);
     };
 
     animate();
 };
 
+// Track key states for friction
+window.keyIsPressed = false;
+window.addEventListener('keydown', () => { window.keyIsPressed = true; });
+window.addEventListener('keyup', () => { window.keyIsPressed = false; });
 
 create3DEnvironment();
