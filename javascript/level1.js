@@ -1,61 +1,55 @@
-let trackSelected = false;
-let carSelected = false;
-let modeSelected = false;
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
-// Handle keydown for Controls (C) and Game Aim (G) popups
-document.addEventListener('keydown', (event) => {
-    if (event.key === 'C' || event.key === 'c') {
-        showPopup('controls-popup');
-    }
-    if (event.key === 'G' || event.key === 'g') {
-        showPopup('game-aim-popup');
-    }
-});
+const thirdPersonView = {
+    fieldOfView: 75,
+    aspect: window.innerWidth / window.innerHeight,
+    nearPlane: 0.1,
+    farPlane: 100,
+    cameraPositionX: 0,
+    cameraPositionY: 5,
+    cameraPositionZ: 20
+};
 
-// Select track
-function selectTrack(trackName) {
-    console.log('Track selected:', trackName);
-    trackSelected = true;
-    document.getElementById('track-selection').classList.add('hidden');
-    document.getElementById('car-selection').classList.remove('hidden');
+const buildRoad = () => {
+    const roadWidth = 8;
+    const roadLength = 64;
+    const geometry = new THREE.PlaneGeometry(roadWidth, roadLength);
+    const material = new THREE.MeshBasicMaterial({ color: 0x333333 });
+    const road = new THREE.Mesh(geometry, material);
+    road.rotation.x = -Math.PI / 2;
+    road.position.y = 0;
+    return road;
 }
 
-// Select car
-function selectCar(carName) {
-    console.log('Car selected:', carName);
-    carSelected = true;
-    document.getElementById('car-selection').classList.add('hidden');
-    document.getElementById('mode-selection').classList.remove('hidden');
+const create3DEnvironment = () => {
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    document.body.appendChild(renderer.domElement);
+    
+    const camera = new THREE.PerspectiveCamera(
+        thirdPersonView.fieldOfView,
+        thirdPersonView.aspect,
+        thirdPersonView.nearPlane,
+        thirdPersonView.farPlane
+    );
+    camera.position.set(
+        thirdPersonView.cameraPositionX,
+        thirdPersonView.cameraPositionY,
+        thirdPersonView.cameraPositionZ
+    );
+  
+    const scene = new THREE.Scene();
+    scene.add(buildRoad());
+
+    const controls = new OrbitControls(camera, renderer.domElement);
+
+    const animate = () => {
+        requestAnimationFrame(animate);
+        renderer.render(scene, camera);
+    };
+
+    animate();
 }
 
-// Select mode
-function selectMode(modeName) {
-    console.log('Mode selected:', modeName);
-    modeSelected = true;
-    document.getElementById('mode-selection').classList.add('hidden');
-    document.getElementById('start-section').classList.remove('hidden');
-}
-
-// Start game
-function startGame() {
-    if (trackSelected && carSelected && modeSelected) {
-        
-        // Redirect to the game (race.html for now)
-        window.location.href = 'race.html'; // Replace with your game page
-    }
-}
-
-// Go back to main menu
-function goBack() {
-    window.location.href = '../html/mainMenu.html'; // Redirect to main menu
-}
-
-// Show popup
-function showPopup(popupId) {
-    document.getElementById(popupId).classList.remove('hidden');
-}
-
-// Close popup
-function closePopup(popupId) {
-    document.getElementById(popupId).classList.add('hidden');
-}
+create3DEnvironment();
