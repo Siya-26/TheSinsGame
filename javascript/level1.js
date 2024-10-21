@@ -5,13 +5,19 @@ import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader.js';
 import * as CANNON from 'cannon-es';
 import CannonDebugger from 'cannon-es-debugger';
 
-// CONTROLS AND SETUP
+// GAME PARAMETERS
 const moveSpeed = 0.2;
-const direction = { x: 0, y: 0, z: 0 };
 const maxSteerVal = Math.PI / 8;
-const maxForce = 10;
+const maxForce = 15;
 const frictionCoefficient = 0.1; // Coefficient of friction
+const thirdPersonView = {
+    fieldOfView: 75,
+    aspect: window.innerWidth / window.innerHeight,
+    nearPlane: 0.1,
+    farPlane: 100,
+};
 
+// INPUT CONTROLS
 const enableInputControls = (vehicle) => {
     window.addEventListener('keydown', (event) => {
         switch (event.key) {
@@ -73,103 +79,82 @@ const groundBody = new CANNON.Body({
     type: CANNON.Body.STATIC,
     shape: new CANNON.Plane(),
 });
-
 groundBody.quaternion.setFromEuler(-Math.PI / 2, 0, 0);
 physicsWorld.addBody(groundBody);
 
+// WHEEL CREATION FUNCTION (Refactored)
+const addWheel = (vehicle, position, axisWidth) => {
+    const wheelBody = new CANNON.Body({
+        mass: 2,
+        material: new CANNON.Material('wheel'),
+    });
+    wheelBody.addShape(new CANNON.Sphere(0.1));
+    wheelBody.angularDamping = 0.4;
+    vehicle.addWheel({
+        body: wheelBody,
+        position: new CANNON.Vec3(position.x, 0, position.z * axisWidth),
+        axis: new CANNON.Vec3(0, 0, 1),
+        direction: new CANNON.Vec3(0, -1, 0),
+    });
+    return wheelBody;
+};
+
 const physicsCar = () => {
     const carBody = new CANNON.Body({
-        mass: 10,
+        mass: 15,
         shape: new CANNON.Box(new CANNON.Vec3(1, 0.05, 0.5)),
     });
 
     const vehicle = new CANNON.RigidVehicle({
         chassisBody: carBody,
     });
-    
+
     const axisWidth = 0.5;
-    const wheelBody1 = new CANNON.Body({
-        mass: 2,
-        material: new CANNON.Material('wheel'),
-    });
-    wheelBody1.addShape(new CANNON.Sphere(0.1));
-    wheelBody1.angularDamping = 0.4;
-    vehicle.addWheel({
-        body: wheelBody1,
-        position: new CANNON.Vec3(-1, 0, axisWidth / 1),
-        axis: new CANNON.Vec3(0, 0, 1),
-        direction: new CANNON.Vec3(0, -1, 0),
-    });
+    const wheelBody1 = addWheel(vehicle, { x: -1, z: 1 }, axisWidth);
+    const wheelBody2 = addWheel(vehicle, { x: -1, z: -1 }, axisWidth);
+    const wheelBody3 = addWheel(vehicle, { x: 1, z: -1 }, axisWidth);
+    const wheelBody4 = addWheel(vehicle, { x: 1, z: 1 }, axisWidth);
 
-    const wheelBody2 = new CANNON.Body({
-        mass: 2,
-        material: new CANNON.Material('wheel'),
-    });
-    wheelBody2.addShape(new CANNON.Sphere(0.1));
-    wheelBody2.angularDamping = 0.4;
-    vehicle.addWheel({
-        body: wheelBody2,
-        position: new CANNON.Vec3(-1, 0, -axisWidth / 1),
-        axis: new CANNON.Vec3(0, 0, 1),
-        direction: new CANNON.Vec3(0, -1, 0),
-    });
+    return { vehicle, wheelBody1, wheelBody2, wheelBody3, wheelBody4 };
+};
 
-    const wheelBody3 = new CANNON.Body({
-        mass: 2,
-        material: new CANNON.Material('wheel'),
-    });
-    wheelBody3.addShape(new CANNON.Sphere(0.1));
-    wheelBody3.angularDamping = 0.4;
-    vehicle.addWheel({
-        body: wheelBody3,
-        position: new CANNON.Vec3(1, 0, -axisWidth / 1),
-        axis: new CANNON.Vec3(0, 0, 1),
-        direction: new CANNON.Vec3(0, -1, 0),
-    });
-
-    const wheelBody4 = new CANNON.Body({
-        mass: 2,
-        material: new CANNON.Material('wheel'),
-    });
-    wheelBody4.addShape(new CANNON.Sphere(0.1));
-    wheelBody4.angularDamping = 0.4;
-    vehicle.addWheel({
-        body: wheelBody4,
-        position: new CANNON.Vec3(1, 0, axisWidth / 1),
-        axis: new CANNON.Vec3(0, 0, 1),
-        direction: new CANNON.Vec3(0, -1, 0),
-    });
-
-    return { vehicle, wheelBody1, wheelBody2, wheelBody4, wheelBody3 };
-}
-
-const { vehicle, wheelBody1, wheelBody2, wheelBody4, wheelBody3 } = physicsCar();
-
+const { vehicle, wheelBody1, wheelBody2, wheelBody3, wheelBody4 } = physicsCar();
 enableInputControls(vehicle);
-
 vehicle.addToWorld(physicsWorld);
 
-// GAME WORLD
-const thirdPersonView = {
-    fieldOfView: 75,
-    aspect: window.innerWidth / window.innerHeight,
-    nearPlane: 0.1,
-    farPlane: 100,
-};
+// CAMERA FOLLOW LOGIC (Chase View)
+// Updated CAMERA FOLLOW LOGIC (Stable Side View)
+const cameraOffset = new THREE.Vector3(-3, 2, 0); // Position to the side of the car
+const smoothFactor = 0.1; // Factor for smooth camera follow
+const fixedCameraY = 2; // Fixed height for the camera
+
+// const smoothCameraFollow = (camera, car) => {
+//     // Update camera position based on car's rotation
+//     const carDirection = new THREE.Vector3();
+//     car.getWorldDirection(carDirection); // Get the car's forward direction
+//     const carRight = new THREE.Vector3().crossVectors(carDirection, new THREE.Vector3(0, 1, 0)).normalize(); // Get the right direction of the car
+
+//     // Calculate the target position for the camera
+//     const targetPosition = car.position
+//         .clone()
+//         .add(carRight.clone().multiplyScalar(cameraOffset.x)) // Move to the side
+//         .setY(fixedCameraY); // Set a fixed height for the camera
+
+//     // Smoothly interpolate camera position
+//     camera.position.lerp(targetPosition, smoothFactor);
+
+//     // Make the camera look at the car
+//     camera.lookAt(car.position);
+// };
+
+// SCENE SETUP (Optimized with Lazy Loading)
 
 const buildPlane = () => {
     const roadWidth = 256;
     const roadLength = 256;
     const geometry = new THREE.PlaneGeometry(roadWidth, roadLength);
-    const wireframe_geo = new THREE.PlaneGeometry(roadWidth, roadLength, 256, 256);
     const material = new THREE.MeshBasicMaterial({ color: 0xcccccc });
-    const wireframe_mat = new THREE.MeshBasicMaterial({
-        color: 0x000000,
-        wireframe: true
-    });
-    const plane_wireframe = new THREE.Mesh(wireframe_geo, wireframe_mat);
     const plane = new THREE.Mesh(geometry, material);
-    plane.add(plane_wireframe);
     plane.rotation.x = -Math.PI / 2;
     return plane;
 };
@@ -180,113 +165,84 @@ const loadTrack = () => {
     return new Promise((resolve, reject) => {
         loader.load(
             '../Models/Formula_Track.fbx',
-            (fbx) => {
-                resolve(fbx);
-            },
-            (xhr) => {
-                console.log((xhr.loaded / xhr.total * 100) + '% loaded');
-            },
-            (error) => {
-                console.error('An error occurred:', error);
-                reject(error);
-            }
+            (fbx) => resolve(fbx),
+            (xhr) => console.log(`${(xhr.loaded / xhr.total * 100)}% loaded`),
+            (error) => reject(error)
         );
     });
+
 };
 
 const loadCarModel = async (scene) => {
     return new Promise((resolve, reject) => {
         const loader = new GLTFLoader();
-        loader.load('../Models/mazda_rx7_stylised.glb', async (gltf) => {
+        loader.load('../Models/mazda_rx7_stylised.glb', (gltf) => {
             const car = gltf.scene;
-
-            // Scale the car down significantly
-            car.scale.set(0.0040, 0.0040, 0.0040);  // Scale car to 15% of its original size
-
-            // Position the car at the start of the track (z = 0)
-            car.position.set(0, 0.1, -10);  // Position the car at the beginning of the track
-            car.rotateY(47.2);
-
-            // Option 1: Simple black material
-            const blackMaterial = new THREE.MeshStandardMaterial({ color: 0x000000 });
+            car.scale.set(0.0040, 0.0040, 0.0040);  // Scale car
+            car.position.set(1000, 1000, 1000);  // Position car
+            car.rotateY(47.2);  // Rotate car
             car.traverse((child) => {
                 if (child.isMesh) {
-                    child.material = blackMaterial;  // Apply black material
+                    child.material = new THREE.MeshStandardMaterial({ color: 0x000000 });
                 }
             });
-
-            // Option 2: Load a texture (if you want a textured black material)
-            /*
-            const textureLoader = new THREE.TextureLoader();
-            const texture = textureLoader.load('path/to/your/texture.jpg', (texture) => {
-                texture.wrapS = THREE.RepeatWrapping;
-                texture.wrapT = THREE.RepeatWrapping;
-                texture.repeat.set(4, 4); // Adjust texture repetition
-            });
-            const texturedMaterial = new THREE.MeshStandardMaterial({ map: texture });
-            car.traverse((child) => {
-                if (child.isMesh) {
-                    child.material = texturedMaterial;  // Apply textured material
-                }
-            });
-            */
-
-            // Optional: Set shadows if needed
-            car.castShadow = true;
-            car.receiveShadow = true;
-
-            // Rotate the car to face the road
-            car.rotation.y -= Math.PI / 2;
-
-            resolve(car);  // Resolve the promise with the loaded car
-        }, undefined, (error) => {
-            reject(error);  // Reject the promise if there's an error
-        });
+            resolve(car);
+        }, undefined, (error) => reject(error));
     });
 };
 
-const buildBox = () => {
-    const geo = new THREE.BoxGeometry(2, 0.1, 1);
-    const mat = new THREE.MeshBasicMaterial({
-        color: 0x00ff00,
-        transparent: true,
-        opacity: true
-    });
-    const box_mesh = new THREE.Mesh(geo, mat);
-    return box_mesh;
-}
+const loadSkybox = (scene) => {
+    const loader = new THREE.CubeTextureLoader();
+    const texture = loader.load([
+        '../skybox/px.png', // Right
+        '../skybox/nx.png', // Left
+        '../skybox/py.png', // Top
+        '../skybox/ny.png', // Bottom
+        '../skybox/pz.png', // Front
+        '../skybox/nz.png', // Back
+    ]);
 
-const loadSkybox = () => {
-    return new Promise((resolve, reject) => {
-        const loader = new GLTFLoader();
-        loader.load('../skybox/skybox_skydays_3.glb',
-            (gltf) => {
-                const skybox = gltf.scene;
-
-                // Scale the skybox to ensure it fits well
-                skybox.scale.set(100, 100, 100); // Adjust scale as needed
-
-                // Position it at the origin
-                skybox.position.set(0, 0, 0);
-
-                // Set material if necessary
-                skybox.traverse((child) => {
-                    if (child.isMesh) {
-                        child.material.side = THREE.BackSide; // Ensure rendering from inside
-                    }
-                });
-
-                resolve(skybox);
-            },
-            undefined,
-            (error) => {
-                console.error('Error loading skybox:', error);
-                reject(error);
-            }
-        );
-    });
+    scene.background = texture; // Set the skybox as the scene background
 };
 
+let isFirstPerson = false; // Start with 3rd person by default
+
+// CAMERA OFFSET FOR BOTH VIEWS
+const thirdPersonOffset = new THREE.Vector3(-3, 2, 0); // Third-person view (chase view)
+const firstPersonOffset = new THREE.Vector3(1, 1, 0); // First-person view (inside car)
+
+// SMOOTH CAMERA FOLLOW FUNCTION (Updated to support both views)
+const smoothCameraFollow = (camera, car) => {
+    if (isFirstPerson) {
+        // 1st person view: Position camera inside the car
+        const targetPosition = car.position.clone().add(firstPersonOffset);
+        camera.position.lerp(targetPosition, smoothFactor);
+    } else {
+        // 3rd person view: Chase view logic
+        const carDirection = new THREE.Vector3();
+        car.getWorldDirection(carDirection); // Get the car's forward direction
+        const carRight = new THREE.Vector3().crossVectors(carDirection, new THREE.Vector3(0, 1, 0)).normalize(); // Get the right direction of the car
+        
+        const targetPosition = car.position
+            .clone()
+            .add(carRight.clone().multiplyScalar(thirdPersonOffset.x)) // Move to the side
+            .setY(fixedCameraY); // Set a fixed height for the camera
+
+        camera.position.lerp(targetPosition, smoothFactor);
+    }
+
+    // Always make the camera look at the car
+    camera.lookAt(car.position);
+};
+
+// TOGGLE CAMERA VIEW ON 'P' KEY PRESS
+window.addEventListener('keydown', (event) => {
+    if (event.key === 'p' || event.key === 'P') {
+        isFirstPerson = !isFirstPerson; // Toggle between 1st and 3rd person
+    }
+});
+
+// CREATE ENVIRONMENT
 const create3DEnvironment = async () => {
     const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
@@ -298,33 +254,37 @@ const create3DEnvironment = async () => {
         thirdPersonView.nearPlane,
         thirdPersonView.farPlane
     );
-
-    camera.position.set(0, 5, 10);
+    camera.position.set(0, 0, 0);
 
     const controls = new OrbitControls(camera, renderer.domElement);
 
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color('0x000000');
+
+    // Load the skybox
+    loadSkybox(scene);
 
     const plane = buildPlane();
     const model = await loadTrack();
     const car = await loadCarModel(scene);
-    const skybox = await loadSkybox(); // Load the skybox
 
+    // Add the track and models to the scene
     const track = model.children[0].children[7];
     track.scale.set(2, 2, 2);
-    for (let i = 0; i < track.material.length; i++) {
-        track.material[i].emissive.set(0x07030A);
-    }
+    track.material.forEach((material) => material.emissive.set(0x07030A));
 
     scene.add(plane);
-    scene.add(skybox); // Add the skybox to the scene
     scene.add(track);
     scene.add(car);
 
-    const cannonDebugger = new CannonDebugger(scene, physicsWorld, {
-        // color: 0xff0000
-    });
+    // Add lights
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+    scene.add(ambientLight);
+
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+    directionalLight.position.set(10, 10, 10);
+    scene.add(directionalLight);
+
+    const cannonDebugger = new CannonDebugger(scene, physicsWorld);
 
     const animate = () => {
         window.requestAnimationFrame(animate);
@@ -333,20 +293,22 @@ const create3DEnvironment = async () => {
         car.position.copy(vehicle.chassisBody.position);
         car.quaternion.copy(vehicle.chassisBody.quaternion);
 
-        // Apply friction when no forward key is pressed
         if (!window.keyIsPressed) {
             const velocity = vehicle.chassisBody.velocity;
             velocity.x *= (1 - frictionCoefficient);
             velocity.z *= (1 - frictionCoefficient);
         }
 
+        // Smooth camera follow the car (chase view)
+        smoothCameraFollow(camera, car);
+
+        // Render the scene
         renderer.render(scene, camera);
     };
 
     animate();
 };
 
-// Track key states for friction
 window.keyIsPressed = false;
 window.addEventListener('keydown', () => { window.keyIsPressed = true; });
 window.addEventListener('keyup', () => { window.keyIsPressed = false; });
