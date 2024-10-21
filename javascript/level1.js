@@ -6,10 +6,9 @@ import * as CANNON from 'cannon-es';
 import CannonDebugger from 'cannon-es-debugger';
 
 // GAME PARAMETERS
-const moveSpeed = 0.2;
 const maxSteerVal = Math.PI / 8;
-const maxForce = 15;
-const frictionCoefficient = 0.1; // Coefficient of friction
+const maxForce = 10;
+const frictionCoefficient = 0.05;
 const thirdPersonView = {
     fieldOfView: 75,
     aspect: window.innerWidth / window.innerHeight,
@@ -101,7 +100,7 @@ const addWheel = (vehicle, position, axisWidth) => {
 
 const physicsCar = () => {
     const carBody = new CANNON.Body({
-        mass: 15,
+        mass: 20,
         shape: new CANNON.Box(new CANNON.Vec3(1, 0.05, 0.5)),
         position: new CANNON.Vec3(40, 0.1, 27.25),
     });
@@ -124,7 +123,7 @@ enableInputControls(vehicle);
 vehicle.addToWorld(physicsWorld);
 
 const boundaries = (positions) => {
-    const mass = 0;
+    const mass = 1000;
     const body = new CANNON.Body({ mass });
     const s = 2;
 
@@ -140,6 +139,7 @@ const boundaries = (positions) => {
     body.position.set(0, 0.5, 0)
     physicsWorld.addBody(body)
 }
+
 
 // CAMERA FOLLOW LOGIC (Chase View)
 // Updated CAMERA FOLLOW LOGIC (Stable Side View)
@@ -293,9 +293,6 @@ const create3DEnvironment = async () => {
     track.material[4] = trackMaterial;
     track.material[5].emissive = 0xffffff;
     const t = model.children[0].children[7];
-    //console.log("Track: ", track);
-    //t.scale.set(2, 2, 2);
-    //t.position.setY(1);
     boundaries(t.geometry.attributes.position.array);
     //console.log(t.geometry.attributes.position.array.length);
 
