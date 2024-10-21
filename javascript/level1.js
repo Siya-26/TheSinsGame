@@ -122,13 +122,57 @@ const enableInputControls = (vehicle) => {
         }
     });
 };
-const disableInputControls = () => {
-    if (keyDownHandler) {
-        window.removeEventListener('keydown', keyDownHandler);
-    }
-    if (keyUpHandler) {
-        window.removeEventListener('keyup', keyUpHandler);
-    }
+
+const disableInputControls = (vehicle) => {
+    window.addEventListener('keydown', (event) => {
+        switch (event.key) {
+            case 'ArrowUp':
+            case 'w':
+                vehicle.setWheelForce(0, 0);
+                vehicle.setWheelForce(0, 1);
+                break;
+            case 'ArrowDown':
+            case 's':
+                vehicle.setWheelForce(0, 0);
+                vehicle.setWheelForce(0, 1);
+                break;
+            case 'ArrowLeft':
+            case 'a':
+                vehicle.setSteeringValue(0, 0);
+                vehicle.setSteeringValue(0, 1);
+                break;
+            case 'ArrowRight':
+            case 'd':
+                vehicle.setSteeringValue(0, 0);
+                vehicle.setSteeringValue(0, 1);
+                break;
+        }
+    });
+    
+    window.addEventListener('keyup', (event) => {
+        switch (event.key) {
+            case 'w':
+            case 'ArrowUp':
+                vehicle.setWheelForce(0, 0);
+                vehicle.setWheelForce(0, 1);
+                break;
+            case 's':
+            case 'ArrowDown':
+                vehicle.setWheelForce(0, 0);
+                vehicle.setWheelForce(0, 1);
+                break;
+            case 'a':
+            case 'ArrowLeft':
+                vehicle.setSteeringValue(0, 0);
+                vehicle.setSteeringValue(0, 1);
+                break;
+            case 'd':
+            case 'ArrowRight':
+                vehicle.setSteeringValue(0, 0);
+                vehicle.setSteeringValue(0, 1);
+                break;
+        }
+    });
 };
 // PHYSICS WORLD
 const physicsWorld = new CANNON.World({
@@ -383,6 +427,14 @@ const create3DEnvironment = async () => {
             const velocity = vehicle.chassisBody.velocity;
             velocity.x *= (1 - frictionCoefficient);
             velocity.z *= (1 - frictionCoefficient);
+        }
+
+        if(time.state == "running"){
+            enableInputControls(vehicle);
+        }
+        else{
+            console.log("D")
+            disableInputControls(vehicle);
         }
 
         // Smooth camera follow the car (chase view)
