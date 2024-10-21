@@ -5,6 +5,60 @@ import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader.js';
 import * as CANNON from 'cannon-es';
 import CannonDebugger from 'cannon-es-debugger';
 
+class Time {
+    constructor(time) {
+        this.time = time;
+        this.state = "start";
+        this.count = 3;
+        this.countdownInterval = null;
+        this.timerInterval = null;
+    }
+
+    // Method to stop the timer and show the game-over screen if time runs out
+    stopTime() {
+        if (this.time === 0 && this.state === "running") {
+            clearInterval(this.timerInterval); // Stop the timer
+            this.state = "stopped"; // Update the state
+            document.getElementById('stopwatch').innerHTML = `
+                <div class="screen">
+                    <div class="menu">
+                        <h1>Game Over!</h1>
+                        <p>Unfortunately, you have lost this level. Would you like to try again?</p>
+                        <div class="button-container">
+                            <button onclick="window.location.href='level1.html'">Try Again</button>
+                            <button onclick="window.location.href='mainMenu.html'">Cancel</button>
+                        </div>
+                    </div>
+                </div>`;
+        }
+    }
+
+    // Method to start the main timer after the countdown finishes
+    runTime() {
+        this.state = "running"; // Update state to running
+        this.timerInterval = setInterval(() => {
+            this.time -= 1; // Decrease time
+            document.getElementById('stopwatch').innerText = this.time; // Update stopwatch display
+            this.stopTime(); // Check if time should stop
+        }, 1000); // Update every second
+    }
+
+    // Method to handle the countdown from 3
+    startTime() {
+        this.countdownInterval = setInterval(() => {
+            this.count -= 1; // Decrease countdown
+            console.log(this.count);
+            document.getElementById('countdown').innerText = this.count; // Update countdown display
+
+            if (this.count === 0) {
+                clearInterval(this.countdownInterval); // Stop the countdown
+                document.getElementById('countdown').innerText = ''; // Clear the countdown display
+                this.runTime(); // Start the main timer
+            }
+        }, 1000); // Update every second
+    }
+}
+
 // GAME PARAMETERS
 const maxSteerVal = Math.PI / 8;
 const maxForce = 10;
@@ -68,7 +122,14 @@ const enableInputControls = (vehicle) => {
         }
     });
 };
-
+const disableInputControls = () => {
+    if (keyDownHandler) {
+        window.removeEventListener('keydown', keyDownHandler);
+    }
+    if (keyUpHandler) {
+        window.removeEventListener('keyup', keyUpHandler);
+    }
+};
 // PHYSICS WORLD
 const physicsWorld = new CANNON.World({
     gravity: new CANNON.Vec3(0, -9.82, 0),
@@ -119,7 +180,6 @@ const physicsCar = () => {
 };
 
 const { vehicle, wheelBody1, wheelBody2, wheelBody3, wheelBody4 } = physicsCar();
-enableInputControls(vehicle);
 vehicle.addToWorld(physicsWorld);
 
 const boundaries = (positions) => {
@@ -166,7 +226,7 @@ const fixedCameraY = 2; // Fixed height for the camera
 //     camera.lookAt(car.position);
 // };
 
-// SCENE SETUP (Optimized with Lazy Loading)
+// G A M E   W O R L D
 
 const buildPlane = () => {
     const roadWidth = 256;
@@ -309,6 +369,8 @@ const create3DEnvironment = async () => {
     scene.add(directionalLight);
 
     const cannonDebugger = new CannonDebugger(scene, physicsWorld);
+    const time = new Time(15, vehicle);
+    time.startTime();
 
     const animate = () => {
         window.requestAnimationFrame(animate);
