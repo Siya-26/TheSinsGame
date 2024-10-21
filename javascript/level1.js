@@ -103,6 +103,7 @@ const physicsCar = () => {
     const carBody = new CANNON.Body({
         mass: 15,
         shape: new CANNON.Box(new CANNON.Vec3(1, 0.05, 0.5)),
+        position: new CANNON.Vec3(40, 0.1, 27.25),
     });
 
     const vehicle = new CANNON.RigidVehicle({
@@ -122,10 +123,28 @@ const { vehicle, wheelBody1, wheelBody2, wheelBody3, wheelBody4 } = physicsCar()
 enableInputControls(vehicle);
 vehicle.addToWorld(physicsWorld);
 
+const boundaries = (positions) => {
+    const mass = 0;
+    const body = new CANNON.Body({ mass });
+    const s = 2;
+
+    for(let i = 9171; i < 18133; i += 3){
+        const sphereShape = new CANNON.Sphere(0.25);
+        body.addShape(sphereShape, new CANNON.Vec3(positions[i]*s, positions[i+1]*s, positions[i+2]*s));
+    }
+    for(let i = 63117; i < 72115; i += 3){
+        const sphereShape = new CANNON.Sphere(0.25);
+        body.addShape(sphereShape, new CANNON.Vec3(positions[i]*s, positions[i+1]*s, positions[i+2]*s));
+    }
+
+    body.position.set(0, 0.5, 0)
+    physicsWorld.addBody(body)
+}
+
 // CAMERA FOLLOW LOGIC (Chase View)
 // Updated CAMERA FOLLOW LOGIC (Stable Side View)
 const cameraOffset = new THREE.Vector3(-3, 2, 0); // Position to the side of the car
-const smoothFactor = 0.1; // Factor for smooth camera follow
+const smoothFactor = 0.2; // Factor for smooth camera follow
 const fixedCameraY = 2; // Fixed height for the camera
 
 // const smoothCameraFollow = (camera, car) => {
@@ -180,7 +199,7 @@ const loadCarModel = async (scene) => {
             const car = gltf.scene;
             car.scale.set(0.0040, 0.0040, 0.0040);  // Scale car
             car.position.set(1000, 1000, 1000);  // Position car
-            car.rotateY(47.2);  // Rotate car
+            car.rotateX(-90);  // Rotate car
             car.traverse((child) => {
                 if (child.isMesh) {
                     child.material = new THREE.MeshStandardMaterial({ color: 0x000000 });
@@ -254,29 +273,37 @@ const create3DEnvironment = async () => {
         thirdPersonView.nearPlane,
         thirdPersonView.farPlane
     );
-    camera.position.set(0, 0, 0);
+    camera.position.set(0, 10, 0);
 
     const controls = new OrbitControls(camera, renderer.domElement);
 
     const scene = new THREE.Scene();
 
-    // Load the skybox
     loadSkybox(scene);
 
+    // B U I L D I N G   M E S H E S
     const plane = buildPlane();
     const model = await loadTrack();
     const car = await loadCarModel(scene);
-
-    // Add the track and models to the scene
     const track = model.children[0].children[7];
+    const textureLoader = new THREE.TextureLoader();
+    const trackTexture = textureLoader.load('../Models/road.jpg');
+    const trackMaterial = new THREE.MeshStandardMaterial({ map: trackTexture });
     track.scale.set(2, 2, 2);
-    track.material.forEach((material) => material.emissive.set(0x07030A));
+    track.material[4] = trackMaterial;
+    track.material[5].emissive = 0xffffff;
+    const t = model.children[0].children[7];
+    //console.log("Track: ", track);
+    //t.scale.set(2, 2, 2);
+    //t.position.setY(1);
+    boundaries(t.geometry.attributes.position.array);
+    //console.log(t.geometry.attributes.position.array.length);
 
     scene.add(plane);
     scene.add(track);
     scene.add(car);
 
-    // Add lights
+    // L I G H T I N G
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
     scene.add(ambientLight);
 
@@ -292,7 +319,7 @@ const create3DEnvironment = async () => {
         cannonDebugger.update();
         car.position.copy(vehicle.chassisBody.position);
         car.quaternion.copy(vehicle.chassisBody.quaternion);
-
+        controls.update();
         if (!window.keyIsPressed) {
             const velocity = vehicle.chassisBody.velocity;
             velocity.x *= (1 - frictionCoefficient);
