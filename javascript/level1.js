@@ -21,6 +21,10 @@ class Time {
             this.state = "stopped"; // Update the state
             window.location.href = 'lostScreen1.html'; // Redirect to lost screen
         }
+        else if(this.time != 0 && this.state === "stopped"){
+            clearInterval(this.countdownInterval);
+            window.location.href = '../html/winScreen1.html';
+        }
     }
     
 
@@ -500,7 +504,6 @@ const create3DEnvironment = async () => {
     boundaries(t.geometry.attributes.position.array);
     const finish = finishPlane();
     scene.add(finish);
-    console.log(car.children[0].children[0].children[0].children[0].children[0].children[0]);
 
     // Add the plane, track, car to the scene
     scene.add(plane);
@@ -528,6 +531,7 @@ const create3DEnvironment = async () => {
     new THREE.Vector3(0, 0, 10),
     // Add more waypoints as needed
 ];
+
 
 
 // Track the current waypoint index and completed laps
@@ -577,8 +581,10 @@ const animate = () => {
         disableInputControls(vehicle);
     }
 
-    if(car.position.x == 45 && car.position.y == 27.25){
-        console.log("HHH");
+    const boundingBox = new THREE.Box3().setFromObject(car.children[0].children[0].children[0].children[0].children[0].children[0]);
+    const finishBox = new THREE.Box3().setFromObject(finish);
+    if(boundingBox.intersectsBox(finishBox)){
+        time.state = "stopped";
     }
     
 
