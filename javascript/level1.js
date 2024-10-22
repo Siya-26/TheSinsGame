@@ -4,253 +4,9 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader.js';
 import * as CANNON from 'cannon-es';
 import CannonDebugger from 'cannon-es-debugger';
+import { Game } from './game';
+import { Physics, Vehicle } from './physics';
 const loader = new FBXLoader();
-
-class Time {
-    constructor(time) {
-        this.time = time;
-        this.state = "start";
-        this.count = 3;
-        this.countdownInterval = null;
-        this.timerInterval = null;
-    }
-
-
-    stopTime() {
-        if (this.time === 0 && this.state === "running") {
-            clearInterval(this.timerInterval);
-            this.state = "stopped";
-            window.location.href = 'lostScreen1.html';
-        }
-        else if(this.time != 0 && this.state === "stopped"){
-            clearInterval(this.countdownInterval);
-            window.location.href = '../html/winScreen1.html';
-        }
-    }
-    
-
-    runTime() {
-        this.state = "running";
-        this.timerInterval = setInterval(() => {
-            this.time -= 1;
-            document.getElementById('stopwatch').innerText = this.time;
-            this.stopTime();
-        }, 1000);
-    }
-
-
-    startTime() {
-        this.countdownInterval = setInterval(() => {
-            this.count -= 1;
-            console.log(this.count);
-            document.getElementById('countdown').innerText = this.count;
-
-            if (this.count === 0) {
-                clearInterval(this.countdownInterval);
-                document.getElementById('countdown').innerText = '';
-                this.runTime();
-            }
-        }, 1000);
-    }
-}
-
-const enableInputControls = (vehicle) => {
-    window.addEventListener('keydown', (event) => {
-        switch (event.key) {
-            case 'ArrowUp':
-            case 'w':
-                vehicle.setWheelForce(maxForce, 0);
-                vehicle.setWheelForce(maxForce, 1);
-                break;
-            case 'ArrowDown':
-            case 's':
-                vehicle.setWheelForce(-maxForce / 2, 0);
-                vehicle.setWheelForce(-maxForce / 2, 1);
-                break;
-            case 'ArrowLeft':
-            case 'a':
-                vehicle.setSteeringValue(maxSteerVal, 0);
-                vehicle.setSteeringValue(maxSteerVal, 1);
-                break;
-            case 'ArrowRight':
-            case 'd':
-                vehicle.setSteeringValue(-maxSteerVal, 0);
-                vehicle.setSteeringValue(-maxSteerVal, 1);
-                break;
-        }
-    });
-    
-    window.addEventListener('keyup', (event) => {
-        switch (event.key) {
-            case 'w':
-            case 'ArrowUp':
-                vehicle.setWheelForce(0, 0);
-                vehicle.setWheelForce(0, 1);
-                break;
-            case 's':
-            case 'ArrowDown':
-                vehicle.setWheelForce(0, 0);
-                vehicle.setWheelForce(0, 1);
-                break;
-            case 'a':
-            case 'ArrowLeft':
-                vehicle.setSteeringValue(0, 0);
-                vehicle.setSteeringValue(0, 1);
-                break;
-            case 'd':
-            case 'ArrowRight':
-                vehicle.setSteeringValue(0, 0);
-                vehicle.setSteeringValue(0, 1);
-                break;
-        }
-    });
-};
-
-const disableInputControls = (vehicle) => {
-    window.addEventListener('keydown', (event) => {
-        switch (event.key) {
-            case 'ArrowUp':
-            case 'w':
-                vehicle.setWheelForce(0, 0);
-                vehicle.setWheelForce(0, 1);
-                break;
-            case 'ArrowDown':
-            case 's':
-                vehicle.setWheelForce(0, 0);
-                vehicle.setWheelForce(0, 1);
-                break;
-            case 'ArrowLeft':
-            case 'a':
-                vehicle.setSteeringValue(0, 0);
-                vehicle.setSteeringValue(0, 1);
-                break;
-            case 'ArrowRight':
-            case 'd':
-                vehicle.setSteeringValue(0, 0);
-                vehicle.setSteeringValue(0, 1);
-                break;
-        }
-    });
-    
-    window.addEventListener('keyup', (event) => {
-        switch (event.key) {
-            case 'w':
-            case 'ArrowUp':
-                vehicle.setWheelForce(0, 0);
-                vehicle.setWheelForce(0, 1);
-                break;
-            case 's':
-            case 'ArrowDown':
-                vehicle.setWheelForce(0, 0);
-                vehicle.setWheelForce(0, 1);
-                break;
-            case 'a':
-            case 'ArrowLeft':
-                vehicle.setSteeringValue(0, 0);
-                vehicle.setSteeringValue(0, 1);
-                break;
-            case 'd':
-            case 'ArrowRight':
-                vehicle.setSteeringValue(0, 0);
-                vehicle.setSteeringValue(0, 1);
-                break;
-        }
-    });
-};
-
-const maxSteerVal = Math.PI / 8;
-const maxForce = 10;
-const frictionCoefficient = 0.05;
-
-class Physics{
-    constructor(){
-        this.physicsWorld = new CANNON.World({
-            gravity: new CANNON.Vec3(0, -9.82, 0),
-        });
-        this.groundBody = new CANNON.Body({
-            type: CANNON.Body.STATIC,
-            shape: new CANNON.Plane(),
-        });
-        this.positions = [];
-    }
-
-
-    setPositions(positions){
-        this.positions = positions;
-    }
-
-
-    addGround(){
-        this.groundBody.quaternion.setFromEuler(-Math.PI / 2, 0, 0);
-        this.physicsWorld.addBody(this.groundBody);
-    }
-
-
-    addBoundaries(){
-        const mass = 1000;
-        const body = new CANNON.Body({ mass });
-        const s = 2;
-        for(let i = 9171; i < 18133; i += 3){
-            const sphereShape = new CANNON.Sphere(0.25);
-            body.addShape(sphereShape, new CANNON.Vec3(this.positions[i]*s, this.positions[i+1]*s, this.positions[i+2]*s));
-        }
-        for(let i = 63117; i < 72115; i += 3){
-            const sphereShape = new CANNON.Sphere(0.25);
-            body.addShape(sphereShape, new CANNON.Vec3(this.positions[i]*s, this.positions[i+1]*s, this.positions[i+2]*s));
-        }
-    
-        body.position.set(0, 0.5, 0)
-        this.physicsWorld.addBody(body)
-    }
-
-
-    createWorld(){
-        this.addGround();
-        this.addBoundaries();
-    }
-}
-
-const physicsWorld = new Physics();
-
-
-const addWheel = (vehicle, position, axisWidth) => {
-    const wheelBody = new CANNON.Body({
-        mass: 2,
-        material: new CANNON.Material('wheel'),
-    });
-    wheelBody.addShape(new CANNON.Sphere(0.1));
-    wheelBody.angularDamping = 0.4;
-    vehicle.addWheel({
-        body: wheelBody,
-        position: new CANNON.Vec3(position.x, 0, position.z * axisWidth),
-        axis: new CANNON.Vec3(0, 0, 1),
-        direction: new CANNON.Vec3(0, -1, 0),
-    });
-    return wheelBody;
-};
-
-const physicsCar = () => {
-    const carBody = new CANNON.Body({
-        mass: 20,
-        shape: new CANNON.Box(new CANNON.Vec3(1, 0.05, 0.5)),
-        position: new CANNON.Vec3(40, 0.1, 27.25),
-    });
-
-    const vehicle = new CANNON.RigidVehicle({
-        chassisBody: carBody,
-    });
-
-    const axisWidth = 0.5;
-    const wheelBody1 = addWheel(vehicle, { x: -1, z: 1 }, axisWidth);
-    const wheelBody2 = addWheel(vehicle, { x: -1, z: -1 }, axisWidth);
-    const wheelBody3 = addWheel(vehicle, { x: 1, z: -1 }, axisWidth);
-    const wheelBody4 = addWheel(vehicle, { x: 1, z: 1 }, axisWidth);
-
-    return { vehicle, wheelBody1, wheelBody2, wheelBody3, wheelBody4 };
-};
-
-const { vehicle, wheelBody1, wheelBody2, wheelBody3, wheelBody4 } = physicsCar();
-vehicle.addToWorld(physicsWorld.physicsWorld);
 
 
 const buildPlane = () => {
@@ -370,7 +126,7 @@ const loadTrackModel = () => {
 
 };
 
-const loadTrack = async () => {
+const loadTrack = async (physicsWorld) => {
     const model = await loadTrackModel();
     const track = model.children[0].children[7];
     const textureLoader = new THREE.TextureLoader();
@@ -453,9 +209,15 @@ window.addEventListener('keydown', (event) => {
     }
 });
 
-// BUILD WORLD
-
 const create3DEnvironment = async () => {
+    // PHYSICS
+    const physicsWorld = new Physics();
+    const physicsCar = new Vehicle();
+    const vehicle = physicsCar.vehicle;
+    physicsCar.createVehicle();
+    vehicle.addToWorld(physicsWorld.physicsWorld);
+
+
 
     // SCENE + CAMERA + RENDERER
     const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -473,7 +235,8 @@ const create3DEnvironment = async () => {
     loadSkybox(scene);
     const plane = buildPlane();
     const car = await loadCarModel(scene);
-    const track = await loadTrack();
+    const track = await loadTrack(physicsWorld);
+    physicsWorld.createWorld();
     const houses = [];
     await loadHouses(houses);
     const finish = finishPlane();
@@ -485,7 +248,6 @@ const create3DEnvironment = async () => {
     scene.add(track);
     scene.add(car);
     houses.forEach(house => scene.add(house));
-    physicsWorld.createWorld();
 
 
     // L I G H T I N G
@@ -496,37 +258,27 @@ const create3DEnvironment = async () => {
     scene.add(directionalLight);
 
     // OTHERS
-    //const cannonDebugger = new CannonDebugger(scene, physicsWorld);
-    const time = new Time(100, vehicle);
-    time.startTime();
+    const cannonDebugger = new CannonDebugger(scene, physicsWorld.physicsWorld);
+    const game = new Game(100, vehicle);
+    game.startTime();
 
 
     const animate = () => {
         window.requestAnimationFrame(animate);
         physicsWorld.physicsWorld.fixedStep();
-        //cannonDebugger.update();
+        cannonDebugger.update();
         car.position.copy(vehicle.chassisBody.position);
         car.quaternion.copy(vehicle.chassisBody.quaternion);
         controls.update();
 
-    
-        if (!window.keyIsPressed) {
-            const velocity = vehicle.chassisBody.velocity;
-            velocity.x *= (1 - frictionCoefficient);
-            velocity.z *= (1 - frictionCoefficient);
-        }
 
-        // Enable or disable input controls based on time state
-        if (time.state === "running") {
-            enableInputControls(vehicle);
-        } else {
-            disableInputControls(vehicle);
-        }
+        game.checkState();
+        
 
         const boundingBox = new THREE.Box3().setFromObject(car.children[0].children[0].children[0].children[0].children[0].children[0]);
         const finishBox = new THREE.Box3().setFromObject(finish);
         if(boundingBox.intersectsBox(finishBox)){
-            time.state = "stopped";
+            game.state = "stopped";
         }
 
         smoothCameraFollow(camera, car);
