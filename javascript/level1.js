@@ -16,14 +16,13 @@ class Time {
 
     // Method to stop the timer and show the game-over screen if time runs out
     stopTime() {
-        if (this.time === 0 && this.state === "running") {
+        if (this.time <= 0 && this.state === "running") {
             clearInterval(this.timerInterval); // Stop the timer
             this.state = "stopped"; // Update the state
             window.location.href = 'lostScreen1.html'; // Redirect to lost screen
         }
     }
     
-
     // Method to start the main timer after the countdown finishes
     runTime() {
         this.state = "running"; // Update state to running
@@ -165,6 +164,7 @@ const disableInputControls = (vehicle) => {
         }
     });
 };
+
 // PHYSICS WORLD
 const physicsWorld = new CANNON.World({
     gravity: new CANNON.Vec3(0, -9.82, 0),
@@ -374,6 +374,7 @@ const createHouse = async (modelPath, scale, position, rotation = { x: 0, y: 0, 
     house.rotation.set(rotation.x, rotation.y, rotation.z); // Apply rotation
     return house;
 };
+
 // CREATE ENVIRONMENT
 const create3DEnvironment = async () => {
     const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -389,7 +390,6 @@ const create3DEnvironment = async () => {
     camera.position.set(0, 10, 0);
 
     const controls = new OrbitControls(camera, renderer.domElement);
-
     const scene = new THREE.Scene();
 
     loadSkybox(scene);
@@ -405,26 +405,49 @@ const create3DEnvironment = async () => {
     // Load houses and add them to the array
     //Tiny House
 
-    houses.push(await createHouse('../Models/tiny_house.glb', [1, 1, 1], [-10, 0.1, 25]));
-    houses.push(await createHouse('../Models/tiny_house.glb', [1, 1, 1], [-20, 0.1, 25]));
-    houses.push(await createHouse('../Models/tiny_house.glb', [1, 1, 1], [-30, 0.1, 35]));
-    houses.push(await createHouse('../Models/tiny_house.glb', [1, 1, 1], [-35, 0.1, 25]));
-    houses.push(await createHouse('../Models/tiny_house.glb', [1, 1, 1], [0, 0.1, 15]));
+    houses.push(await createHouse('../Models/tiny_house.glb', [0.6, 0.6, 0.6], [-10, 0.1, 25]));
+    houses.push(await createHouse('../Models/tiny_house.glb', [0.6, 0.6, 0.6], [-20, 0.1, 25]));
+    houses.push(await createHouse('../Models/tiny_house.glb', [0.6, 0.6, 0.6], [-30, 0.1, 35]));
+    houses.push(await createHouse('../Models/tiny_house.glb', [0.6, 0.6, 0.6], [-35, 0.1, 25]));
+    houses.push(await createHouse('../Models/tiny_house.glb', [0.6, 0.6, 0.6], [0, 0.1, 15]));
+    houses.push(await createHouse('../Models/tiny_house.glb', [0.6, 0.6, 0.6], [15, 0.1, 10]));
+    houses.push(await createHouse('../Models/tiny_house.glb', [0.6, 0.6, 0.6], [20, 0.1, 15]));
+    houses.push(await createHouse('../Models/tiny_house.glb', [0.6, 0.6, 0.6], [25, 0.1, 18]));
+    houses.push(await createHouse('../Models/tiny_house.glb', [0.6, 0.6, 0.6], [30, 0.1, 15]));
+    houses.push(await createHouse('../Models/tiny_house.glb', [0.6, 0.6, 0.6], [35, 0.1, 22]));
+    houses.push(await createHouse('../Models/tiny_house.glb', [0.6, 0.6, 0.6], [40, 0.1, 22]));
+    houses.push(await createHouse('../Models/tiny_house.glb', [0.6, 0.6, 0.6], [45, 0.1, 22]));
+    houses.push(await createHouse('../Models/tiny_house.glb', [0.6, 0.6, 0.6], [50, 0.1, 21]));
+    houses.push(await createHouse('../Models/tiny_house.glb', [0.6, 0.6, 0.6], [55, 0.1, 20]));
+    houses.push(await createHouse('../Models/tiny_house.glb', [0.6, 0.6, 0.6], [60, 0.1, 19]));
+    houses.push(await createHouse('../Models/tiny_house.glb', [0.6, 0.6, 0.6], [65, 0.1, 15]));
 
     //Shanty House
-
+    houses.push(await createHouse('../Models/shanty.glb', [0.2, 0.2, 0.2], [-75, 0.1, -15], {x: 0, y: Math.PI / 2, z: 0 }));
+    houses.push(await createHouse('../Models/shanty.glb', [0.2, 0.2, 0.2], [-65, 0.1, -20], {x: 0, y: Math.PI / 2, z: 0 }));
+    houses.push(await createHouse('../Models/shanty.glb', [0.2, 0.2, 0.2], [-55, 0.1, -20], {x: 0, y: Math.PI / 2, z: 0 }));
+    houses.push(await createHouse('../Models/shanty.glb', [0.2, 0.2, 0.2], [-45, 0.1, -20], {x: 0, y: Math.PI / 2, z: 0 }));
+    houses.push(await createHouse('../Models/shanty.glb', [0.2, 0.2, 0.2], [-35, 0.1, -20], {x: 0, y: Math.PI / 2, z: 0 }));
+    houses.push(await createHouse('../Models/shanty.glb', [0.2, 0.2, 0.2], [-25, 0.1, -20], {x: 0, y: Math.PI / 2, z: 0 }));
+    houses.push(await createHouse('../Models/shanty.glb', [0.2, 0.2, 0.2], [-15, 0.1, -20], {x: 0, y: Math.PI / 2, z: 0 }));
+    houses.push(await createHouse('../Models/shanty.glb', [0.2, 0.2, 0.2], [-5, 0.1, -25], {x: 0, y: Math.PI / 2, z: 0 }));
     houses.push(await createHouse('../Models/shanty.glb', [0.2, 0.2, 0.2], [5, 0.1, -34], {x: 0, y: Math.PI / 2, z: 0 }));
     houses.push(await createHouse('../Models/shanty.glb', [0.2, 0.2, 0.2], [15, 0.1, -34], {x: 0, y: Math.PI / 2, z: 0 }));
     houses.push(await createHouse('../Models/shanty.glb', [0.2, 0.2, 0.2], [25, 0.1, -34], {x: 0, y: Math.PI / 2, z: 0 }));
+    houses.push(await createHouse('../Models/shanty.glb', [0.2, 0.2, 0.2], [35, 0.1, -34], {x: 0, y: Math.PI / 2, z: 0 }));
+    houses.push(await createHouse('../Models/shanty.glb', [0.2, 0.2, 0.2], [45, 0.1, -34], {x: 0, y: Math.PI / 2, z: 0 }));
+    houses.push(await createHouse('../Models/shanty.glb', [0.2, 0.2, 0.2], [55, 0.1, -34], {x: 0, y: Math.PI / 2, z: 0 }));
+    houses.push(await createHouse('../Models/shanty.glb', [0.2, 0.2, 0.2], [65, 0.1, -34], {x: 0, y: Math.PI / 2, z: 0 }));
+
 
     // Bar
 
     houses.push(await createHouse('../Models/bar_shack.glb', [0.020, 0.020, 0.020], [10, 0.1, 11]));
 
-    //Everything else
+    //Everything
     houses.push(await createHouse('../Models/grass.glb', [2, 2, 2], [18, 0.1, 50]));
-    houses.push(await createHouse('../Models/tiny_house.glb', [1, 1, 1], [25, 0.1, 22]));
-
+    houses.push(await createHouse('../Models/soccer_field.glb', [0.5, 0.5, 0.5], [50, 0.1, -10], {x: 0, y: Math.PI / 2, z: 0}));
+    houses.push(await createHouse('../Models/playground.glb', [1.5, 1.5, 1.5], [85, 0.1, -30], {x: 0, y: Math.PI / 2, z: 0}));
 
 
     const track = model.children[0].children[7];
@@ -445,45 +468,45 @@ const create3DEnvironment = async () => {
     // Add all houses to the scene
     houses.forEach(house => scene.add(house));
 
-    // L I G H T I N G
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
-    scene.add(ambientLight);
+   // L I G H T I N G
+   const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+   scene.add(ambientLight);
 
-    const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
-    directionalLight.position.set(10, 10, 10);
-    scene.add(directionalLight);
+   const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+   directionalLight.position.set(10, 10, 10);
+   scene.add(directionalLight);
 
-    const cannonDebugger = new CannonDebugger(scene, physicsWorld);
-    const time = new Time(100, vehicle);
-    time.startTime();
+   const cannonDebugger = new CannonDebugger(scene, physicsWorld);
+   const time = new Time(100); // Set your initial time here
+   time.startTime();
 
-    const animate = () => {
-        window.requestAnimationFrame(animate);
-        physicsWorld.fixedStep();
-        cannonDebugger.update();
-        car.position.copy(vehicle.chassisBody.position);
-        car.quaternion.copy(vehicle.chassisBody.quaternion);
-        controls.update();
-        if (!window.keyIsPressed) {
-            const velocity = vehicle.chassisBody.velocity;
-            velocity.x *= (1 - frictionCoefficient);
-            velocity.z *= (1 - frictionCoefficient);
-        }
+   const animate = () => {
+       window.requestAnimationFrame(animate);
+       physicsWorld.fixedStep();
+       cannonDebugger.update();
+       car.position.copy(vehicle.chassisBody.position);
+       car.quaternion.copy(vehicle.chassisBody.quaternion);
+       controls.update();
+       if (!window.keyIsPressed) {
+           const velocity = vehicle.chassisBody.velocity;
+           velocity.x *= (1 - frictionCoefficient);
+           velocity.z *= (1 - frictionCoefficient);
+       }
 
-        if (time.state === "running") {
-            enableInputControls(vehicle);
-        } else {
-            disableInputControls(vehicle);
-        }
+       if (time.state === "running") {
+           enableInputControls(vehicle);
+       } else {
+           disableInputControls(vehicle);
+       }
 
-        // Smooth camera follow the car (chase view)
-        smoothCameraFollow(camera, car);
+       // Smooth camera follow the car (chase view)
+       smoothCameraFollow(camera, car);
 
-        // Render the scene
-        renderer.render(scene, camera);
-    };
+       // Render the scene
+       renderer.render(scene, camera);
+   };
 
-    animate();
+   animate();
 };
 
 window.keyIsPressed = false;
