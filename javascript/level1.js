@@ -273,6 +273,17 @@ const buildPlane = () => {
     return plane;
 };
 
+const finishPlane = () => {
+    const roadWidth = 8;
+    const roadLength = 2;
+    const geometry = new THREE.PlaneGeometry(roadWidth, roadLength);
+    const material = new THREE.MeshBasicMaterial({ color: 0xcccccc });
+    const plane = new THREE.Mesh(geometry, material);
+    plane.position.set(45, 0.1, 27.25);
+    plane.rotation.y = -Math.PI / 2;
+    return plane;
+};
+
 const loader = new FBXLoader();
 
 const loadTrack = () => {
@@ -487,12 +498,14 @@ const create3DEnvironment = async () => {
     track.material[5].emissive = 0xffffff;
     const t = model.children[0].children[7];
     boundaries(t.geometry.attributes.position.array);
+    const finish = finishPlane();
+    scene.add(finish);
+    console.log(car.children[0].children[0].children[0].children[0].children[0].children[0]);
 
     // Add the plane, track, car to the scene
     scene.add(plane);
     scene.add(track);
     scene.add(car);
-
     // Add all houses to the scene
     houses.forEach(house => scene.add(house));
 
@@ -504,8 +517,8 @@ const create3DEnvironment = async () => {
     directionalLight.position.set(10, 10, 10);
     scene.add(directionalLight);
 
-    const cannonDebugger = new CannonDebugger(scene, physicsWorld);
-    const time = new Time(60, vehicle);
+    //const cannonDebugger = new CannonDebugger(scene, physicsWorld);
+    const time = new Time(100, vehicle);
     time.startTime();
 
   const waypoints = [
@@ -515,6 +528,7 @@ const create3DEnvironment = async () => {
     new THREE.Vector3(0, 0, 10),
     // Add more waypoints as needed
 ];
+
 
 // Track the current waypoint index and completed laps
 let currentWaypointIndex = 0;
@@ -541,7 +555,7 @@ const checkWaypointProgress = (carPosition) => {
 const animate = () => {
     window.requestAnimationFrame(animate);
     physicsWorld.fixedStep();
-    cannonDebugger.update();
+    //cannonDebugger.update();
     car.position.copy(vehicle.chassisBody.position);
     car.quaternion.copy(vehicle.chassisBody.quaternion);
     controls.update();
@@ -563,14 +577,20 @@ const animate = () => {
         disableInputControls(vehicle);
     }
 
+    if(car.position.x == 45 && car.position.y == 27.25){
+        console.log("HHH");
+    }
+    
+
     // Smooth camera follow the car
     smoothCameraFollow(camera, car);
 
     // Render the scene
     renderer.render(scene, camera);
 };
-    animate();
+animate();
 };
+
 
 window.keyIsPressed = false;
 window.addEventListener('keydown', () => { window.keyIsPressed = true; });
