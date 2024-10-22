@@ -4,6 +4,7 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader.js';
 import * as CANNON from 'cannon-es';
 import CannonDebugger from 'cannon-es-debugger';
+const loader = new FBXLoader();
 
 class Time {
     constructor(time) {
@@ -14,12 +15,12 @@ class Time {
         this.timerInterval = null;
     }
 
-    // Method to stop the timer and show the game-over screen if time runs out
+
     stopTime() {
         if (this.time === 0 && this.state === "running") {
-            clearInterval(this.timerInterval); // Stop the timer
-            this.state = "stopped"; // Update the state
-            window.location.href = 'lostScreen1.html'; // Redirect to lost screen
+            clearInterval(this.timerInterval);
+            this.state = "stopped";
+            window.location.href = 'lostScreen1.html';
         }
         else if(this.time != 0 && this.state === "stopped"){
             clearInterval(this.countdownInterval);
@@ -28,44 +29,31 @@ class Time {
     }
     
 
-    // Method to start the main timer after the countdown finishes
     runTime() {
-        this.state = "running"; // Update state to running
+        this.state = "running";
         this.timerInterval = setInterval(() => {
-            this.time -= 1; // Decrease time
-            document.getElementById('stopwatch').innerText = this.time; // Update stopwatch display
-            this.stopTime(); // Check if time should stop
-        }, 1000); // Update every second
+            this.time -= 1;
+            document.getElementById('stopwatch').innerText = this.time;
+            this.stopTime();
+        }, 1000);
     }
 
-    // Method to handle the countdown from 3
+
     startTime() {
         this.countdownInterval = setInterval(() => {
-            this.count -= 1; // Decrease countdown
+            this.count -= 1;
             console.log(this.count);
-            document.getElementById('countdown').innerText = this.count; // Update countdown display
+            document.getElementById('countdown').innerText = this.count;
 
             if (this.count === 0) {
-                clearInterval(this.countdownInterval); // Stop the countdown
-                document.getElementById('countdown').innerText = ''; // Clear the countdown display
-                this.runTime(); // Start the main timer
+                clearInterval(this.countdownInterval);
+                document.getElementById('countdown').innerText = '';
+                this.runTime();
             }
-        }, 1000); // Update every second
+        }, 1000);
     }
 }
 
-// GAME PARAMETERS
-const maxSteerVal = Math.PI / 8;
-const maxForce = 10;
-const frictionCoefficient = 0.05;
-const thirdPersonView = {
-    fieldOfView: 75,
-    aspect: window.innerWidth / window.innerHeight,
-    nearPlane: 0.1,
-    farPlane: 100,
-};
-
-// INPUT CONTROLS
 const enableInputControls = (vehicle) => {
     window.addEventListener('keydown', (event) => {
         switch (event.key) {
@@ -169,19 +157,62 @@ const disableInputControls = (vehicle) => {
         }
     });
 };
-// PHYSICS WORLD
-const physicsWorld = new CANNON.World({
-    gravity: new CANNON.Vec3(0, -9.82, 0),
-});
 
-const groundBody = new CANNON.Body({
-    type: CANNON.Body.STATIC,
-    shape: new CANNON.Plane(),
-});
-groundBody.quaternion.setFromEuler(-Math.PI / 2, 0, 0);
-physicsWorld.addBody(groundBody);
+const maxSteerVal = Math.PI / 8;
+const maxForce = 10;
+const frictionCoefficient = 0.05;
 
-// WHEEL CREATION FUNCTION (Refactored)
+class Physics{
+    constructor(){
+        this.physicsWorld = new CANNON.World({
+            gravity: new CANNON.Vec3(0, -9.82, 0),
+        });
+        this.groundBody = new CANNON.Body({
+            type: CANNON.Body.STATIC,
+            shape: new CANNON.Plane(),
+        });
+        this.positions = [];
+    }
+
+
+    setPositions(positions){
+        this.positions = positions;
+    }
+
+
+    addGround(){
+        this.groundBody.quaternion.setFromEuler(-Math.PI / 2, 0, 0);
+        this.physicsWorld.addBody(this.groundBody);
+    }
+
+
+    addBoundaries(){
+        const mass = 1000;
+        const body = new CANNON.Body({ mass });
+        const s = 2;
+        for(let i = 9171; i < 18133; i += 3){
+            const sphereShape = new CANNON.Sphere(0.25);
+            body.addShape(sphereShape, new CANNON.Vec3(this.positions[i]*s, this.positions[i+1]*s, this.positions[i+2]*s));
+        }
+        for(let i = 63117; i < 72115; i += 3){
+            const sphereShape = new CANNON.Sphere(0.25);
+            body.addShape(sphereShape, new CANNON.Vec3(this.positions[i]*s, this.positions[i+1]*s, this.positions[i+2]*s));
+        }
+    
+        body.position.set(0, 0.5, 0)
+        this.physicsWorld.addBody(body)
+    }
+
+
+    createWorld(){
+        this.addGround();
+        this.addBoundaries();
+    }
+}
+
+const physicsWorld = new Physics();
+
+
 const addWheel = (vehicle, position, axisWidth) => {
     const wheelBody = new CANNON.Body({
         mass: 2,
@@ -219,53 +250,8 @@ const physicsCar = () => {
 };
 
 const { vehicle, wheelBody1, wheelBody2, wheelBody3, wheelBody4 } = physicsCar();
-vehicle.addToWorld(physicsWorld);
+vehicle.addToWorld(physicsWorld.physicsWorld);
 
-const boundaries = (positions) => {
-    const mass = 1000;
-    const body = new CANNON.Body({ mass });
-    const s = 2;
-
-    for(let i = 9171; i < 18133; i += 3){
-        const sphereShape = new CANNON.Sphere(0.25);
-        body.addShape(sphereShape, new CANNON.Vec3(positions[i]*s, positions[i+1]*s, positions[i+2]*s));
-    }
-    for(let i = 63117; i < 72115; i += 3){
-        const sphereShape = new CANNON.Sphere(0.25);
-        body.addShape(sphereShape, new CANNON.Vec3(positions[i]*s, positions[i+1]*s, positions[i+2]*s));
-    }
-
-    body.position.set(0, 0.5, 0)
-    physicsWorld.addBody(body)
-}
-
-
-// CAMERA FOLLOW LOGIC (Chase View)
-// Updated CAMERA FOLLOW LOGIC (Stable Side View)
-const cameraOffset = new THREE.Vector3(-3, 2, 0); // Position to the side of the car
-const smoothFactor = 0.2; // Factor for smooth camera follow
-const fixedCameraY = 2; // Fixed height for the camera
-
-// const smoothCameraFollow = (camera, car) => {
-//     // Update camera position based on car's rotation
-//     const carDirection = new THREE.Vector3();
-//     car.getWorldDirection(carDirection); // Get the car's forward direction
-//     const carRight = new THREE.Vector3().crossVectors(carDirection, new THREE.Vector3(0, 1, 0)).normalize(); // Get the right direction of the car
-
-//     // Calculate the target position for the camera
-//     const targetPosition = car.position
-//         .clone()
-//         .add(carRight.clone().multiplyScalar(cameraOffset.x)) // Move to the side
-//         .setY(fixedCameraY); // Set a fixed height for the camera
-
-//     // Smoothly interpolate camera position
-//     camera.position.lerp(targetPosition, smoothFactor);
-
-//     // Make the camera look at the car
-//     camera.lookAt(car.position);
-// };
-
-// G A M E   W O R L D
 
 const buildPlane = () => {
     const roadWidth = 256;
@@ -288,90 +274,6 @@ const finishPlane = () => {
     return plane;
 };
 
-const loader = new FBXLoader();
-
-const loadTrack = () => {
-    return new Promise((resolve, reject) => {
-        loader.load(
-            '../Models/Formula_Track.fbx',
-            (fbx) => resolve(fbx),
-            (xhr) => console.log(`${(xhr.loaded / xhr.total * 100)}% loaded`),
-            (error) => reject(error)
-        );
-    });
-
-};
-
-const loadCarModel = async (scene) => {
-    return new Promise((resolve, reject) => {
-        const loader = new GLTFLoader();
-        loader.load('../Models/mazda_rx7_stylised.glb', (gltf) => {
-            const car = gltf.scene;
-            car.scale.set(0.0030, 0.0030, 0.0030);  // Scale car
-            car.position.set(1000, 1000, 1000);  // Position car
-            car.rotateX(-90);  // Rotate car
-            car.traverse((child) => {
-                if (child.isMesh) {
-                    child.material = new THREE.MeshStandardMaterial({ color: 0x000000 });
-                }
-            });
-            resolve(car);
-        }, undefined, (error) => reject(error));
-    });
-};
-
-const loadSkybox = (scene) => {
-    const loader = new THREE.CubeTextureLoader();
-    const texture = loader.load([
-        '../skybox/px.png', // Right
-        '../skybox/nx.png', // Left
-        '../skybox/py.png', // Top
-        '../skybox/ny.png', // Bottom
-        '../skybox/pz.png', // Front
-        '../skybox/nz.png', // Back
-    ]);
-
-    scene.background = texture; // Set the skybox as the scene background
-};
-
-let isFirstPerson = false; // Start with 3rd person by default
-
-// CAMERA OFFSET FOR BOTH VIEWS
-const thirdPersonOffset = new THREE.Vector3(-3, 2, 0); // Third-person view (chase view)
-const firstPersonOffset = new THREE.Vector3(1, 1, 0); // First-person view (inside car)
-
-// SMOOTH CAMERA FOLLOW FUNCTION (Updated to support both views)
-const smoothCameraFollow = (camera, car) => {
-    if (isFirstPerson) {
-        // 1st person view: Position camera inside the car
-        const targetPosition = car.position.clone().add(firstPersonOffset);
-        camera.position.lerp(targetPosition, smoothFactor);
-    } else {
-        // 3rd person view: Chase view logic
-        const carDirection = new THREE.Vector3();
-        car.getWorldDirection(carDirection); // Get the car's forward direction
-        const carRight = new THREE.Vector3().crossVectors(carDirection, new THREE.Vector3(0, 1, 0)).normalize(); // Get the right direction of the car
-        
-        const targetPosition = car.position
-            .clone()
-            .add(carRight.clone().multiplyScalar(thirdPersonOffset.x)) // Move to the side
-            .setY(fixedCameraY); // Set a fixed height for the camera
-
-        camera.position.lerp(targetPosition, smoothFactor);
-    }
-
-    // Always make the camera look at the car
-    camera.lookAt(car.position);
-};
-
-// TOGGLE CAMERA VIEW ON 'P' KEY PRESS
-window.addEventListener('keydown', (event) => {
-    if (event.key === 'p' || event.key === 'P') {
-        isFirstPerson = !isFirstPerson; // Toggle between 1st and 3rd person
-    }
-});
-
-// Function to load a house model
 const loadHouseModel = async (path, scale, position) => {
     return new Promise((resolve, reject) => {
         const loader = new GLTFLoader();
@@ -389,37 +291,8 @@ const createHouse = async (modelPath, scale, position, rotation = { x: 0, y: 0, 
     house.rotation.set(rotation.x, rotation.y, rotation.z); // Apply rotation
     return house;
 };
-// CREATE ENVIRONMENT
-const create3DEnvironment = async () => {
-    const renderer = new THREE.WebGLRenderer({ antialias: true });
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.shadowMap.enabled = true; // Enable shadow mapping
-    renderer.shadowMap.type = THREE.PCFSoftShadowMap; // Set shadow map type
-    document.body.appendChild(renderer.domElement);
 
-    const camera = new THREE.PerspectiveCamera(
-        thirdPersonView.fieldOfView,
-        thirdPersonView.aspect,
-        thirdPersonView.nearPlane,
-        thirdPersonView.farPlane
-    );
-    camera.position.set(0, 10, 0);
-
-    const controls = new OrbitControls(camera, renderer.domElement);
-    const scene = new THREE.Scene();
-
-    loadSkybox(scene);
-
-    const plane = buildPlane();
-    const model = await loadTrack();
-    const car = await loadCarModel(scene);
-    
-    // Create an array to hold house models
-    const houses = [];
-    
-    // Load houses and add them to the array
-    //Tiny House
-
+const loadHouses = async (houses) => {
     houses.push(await createHouse('../Models/tiny_house.glb', [0.6, 0.6, 0.6], [-10, 0.1, 25]));
     houses.push(await createHouse('../Models/tiny_house.glb', [0.6, 0.6, 0.6], [-20, 0.1, 25]));
     houses.push(await createHouse('../Models/tiny_house.glb', [0.6, 0.6, 0.6], [0, 0.1, 15]));
@@ -477,22 +350,28 @@ const create3DEnvironment = async () => {
     houses.push(await createHouse('../Models/shanty.glb', [0.2, 0.2, 0.2], [15, 0.1, -15], {x: 0, y: -Math.PI / 2, z: 0 }));
     houses.push(await createHouse('../Models/shanty.glb', [0.2, 0.2, 0.2], [25, 0.1, -15], {x: 0, y: -Math.PI / 2, z: 0 }));
 
-    // Bar
-
     houses.push(await createHouse('../Models/bar_shack.glb', [0.015, 0.015, 0.015], [10, 0.1, 11]));
-
-    //Everything
-    // houses.push(await createHouse('../Models/tree.glb', [0.5, 0.5, 0.5], [-90, 0.1, 15], {x: 0, y: Math.PI / 2, z: 0}));
-    // houses.push(await createHouse('../Models/tree.glb', [0.5, 0.5, 0.5], [-90, 0.1, -5], {x: 0, y: Math.PI / 2, z: 0}));
-    // houses.push(await createHouse('../Models/tree.glb', [0.5, 0.5, 0.5], [-90, 0.1, 45], {x: 0, y: Math.PI / 2, z: 0}));
-
     houses.push(await createHouse('../Models/grass.glb', [2, 2, 2], [15, 0.1, 10]));
     houses.push(await createHouse('../Models/grass.glb', [2, 2, 2], [15, 0.1, 20]));
     houses.push(await createHouse('../Models/grass.glb', [2, 2, 2], [15, 0.1, 30]));
-
     houses.push(await createHouse('../Models/soccer_field.glb', [0.5, 0.5, 0.5], [50, 0.1, -10], {x: 0, y: Math.PI / 2, z: 0}));
     houses.push(await createHouse('../Models/playground.glb', [1.5, 1.5, 1.5], [85, 0.1, -30], {x: 0, y: Math.PI / 2, z: 0}));
+}
 
+const loadTrackModel = () => {
+    return new Promise((resolve, reject) => {
+        loader.load(
+            '../Models/Formula_Track.fbx',
+            (fbx) => resolve(fbx),
+            (xhr) => console.log(`${(xhr.loaded / xhr.total * 100)}% loaded`),
+            (error) => reject(error)
+        );
+    });
+
+};
+
+const loadTrack = async () => {
+    const model = await loadTrackModel();
     const track = model.children[0].children[7];
     const textureLoader = new THREE.TextureLoader();
     const trackTexture = textureLoader.load('../Models/road.jpg');
@@ -501,100 +380,159 @@ const create3DEnvironment = async () => {
     track.material[4] = trackMaterial;
     track.material[5].emissive = 0xffffff;
     const t = model.children[0].children[7];
-    boundaries(t.geometry.attributes.position.array);
-    const finish = finishPlane();
-    scene.add(finish);
+    physicsWorld.setPositions(t.geometry.attributes.position.array);
+    return track;
+}
 
-    // Add the plane, track, car to the scene
+const loadCarModel = async (scene) => {
+    return new Promise((resolve, reject) => {
+        const loader = new GLTFLoader();
+        loader.load('../Models/mazda_rx7_stylised.glb', (gltf) => {
+            const car = gltf.scene;
+            car.scale.set(0.0030, 0.0030, 0.0030);  // Scale car
+            car.position.set(1000, 1000, 1000);  // Position car
+            car.rotateX(-90);  // Rotate car
+            car.traverse((child) => {
+                if (child.isMesh) {
+                    child.material = new THREE.MeshStandardMaterial({ color: 0x000000 });
+                }
+            });
+            resolve(car);
+        }, undefined, (error) => reject(error));
+    });
+};
+
+const loadSkybox = (scene) => {
+    const loader = new THREE.CubeTextureLoader();
+    const texture = loader.load([
+        '../skybox/px.png', // Right
+        '../skybox/nx.png', // Left
+        '../skybox/py.png', // Top
+        '../skybox/ny.png', // Bottom
+        '../skybox/pz.png', // Front
+        '../skybox/nz.png', // Back
+    ]);
+
+    scene.background = texture; // Set the skybox as the scene background
+};
+
+// CAMERA FUNCTIONS
+
+let isFirstPerson = false;
+const smoothFactor = 0.2;
+const fixedCameraY = 2;
+const thirdPersonOffset = new THREE.Vector3(-3, 2, 0);
+const firstPersonOffset = new THREE.Vector3(1, 1, 0);
+
+const smoothCameraFollow = (camera, car) => {
+    if (isFirstPerson) {
+        // 1st person view: Position camera inside the car
+        const targetPosition = car.position.clone().add(firstPersonOffset);
+        camera.position.lerp(targetPosition, smoothFactor);
+    } else {
+        // 3rd person view: Chase view logic
+        const carDirection = new THREE.Vector3();
+        car.getWorldDirection(carDirection); // Get the car's forward direction
+        const carRight = new THREE.Vector3().crossVectors(carDirection, new THREE.Vector3(0, 1, 0)).normalize(); // Get the right direction of the car
+        
+        const targetPosition = car.position
+            .clone()
+            .add(carRight.clone().multiplyScalar(thirdPersonOffset.x)) // Move to the side
+            .setY(fixedCameraY); // Set a fixed height for the camera
+
+        camera.position.lerp(targetPosition, smoothFactor);
+    }
+
+    // Always make the camera look at the car
+    camera.lookAt(car.position);
+};
+
+window.addEventListener('keydown', (event) => {
+    if (event.key === 'p' || event.key === 'P') {
+        isFirstPerson = !isFirstPerson; // Toggle between 1st and 3rd person
+    }
+});
+
+// BUILD WORLD
+
+const create3DEnvironment = async () => {
+
+    // SCENE + CAMERA + RENDERER
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    document.body.appendChild(renderer.domElement);
+    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 100,);
+    camera.position.set(0, 10, 0);
+    const controls = new OrbitControls(camera, renderer.domElement);
+    const scene = new THREE.Scene();
+
+
+    // LOAD MODELS 
+    loadSkybox(scene);
+    const plane = buildPlane();
+    const car = await loadCarModel(scene);
+    const track = await loadTrack();
+    const houses = [];
+    await loadHouses(houses);
+    const finish = finishPlane();
+
+
+    // SCENE ADD
+    scene.add(finish);
     scene.add(plane);
     scene.add(track);
     scene.add(car);
-    // Add all houses to the scene
     houses.forEach(house => scene.add(house));
+    physicsWorld.createWorld();
+
 
     // L I G H T I N G
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
     scene.add(ambientLight);
-
     const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
     directionalLight.position.set(10, 10, 10);
     scene.add(directionalLight);
 
+    // OTHERS
     //const cannonDebugger = new CannonDebugger(scene, physicsWorld);
     const time = new Time(100, vehicle);
     time.startTime();
 
-  const waypoints = [
-    new THREE.Vector3(0, 0, 0),
-    new THREE.Vector3(10, 0, 0),
-    new THREE.Vector3(10, 0, 10),
-    new THREE.Vector3(0, 0, 10),
-    // Add more waypoints as needed
-];
 
+    const animate = () => {
+        window.requestAnimationFrame(animate);
+        physicsWorld.physicsWorld.fixedStep();
+        //cannonDebugger.update();
+        car.position.copy(vehicle.chassisBody.position);
+        car.quaternion.copy(vehicle.chassisBody.quaternion);
+        controls.update();
 
-
-// Track the current waypoint index and completed laps
-let currentWaypointIndex = 0;
-let completedLaps = 0;
-
-// Function to check if the car is close to the next waypoint
-const checkWaypointProgress = (carPosition) => {
-    const currentWaypoint = waypoints[currentWaypointIndex];
-    const distance = carPosition.distanceTo(currentWaypoint);
-
-    if (distance < 1) { // If close enough to the waypoint
-        currentWaypointIndex++; // Move to the next waypoint
-
-        // If all waypoints are completed, reset to the start and increase lap count
-        if (currentWaypointIndex >= waypoints.length) {
-            currentWaypointIndex = 0; // Reset to first waypoint
-            completedLaps++; // Increase lap count
-            time.checkWinCondition(completedLaps); // Check for win condition
-        }
-    }
-};
-
-// Inside your animate function, after updating the car's position:
-const animate = () => {
-    window.requestAnimationFrame(animate);
-    physicsWorld.fixedStep();
-    //cannonDebugger.update();
-    car.position.copy(vehicle.chassisBody.position);
-    car.quaternion.copy(vehicle.chassisBody.quaternion);
-    controls.update();
-
-    // Check car's position against waypoints
-    checkWaypointProgress(car.position);
-
-    // Existing friction handling
-    if (!window.keyIsPressed) {
-        const velocity = vehicle.chassisBody.velocity;
-        velocity.x *= (1 - frictionCoefficient);
-        velocity.z *= (1 - frictionCoefficient);
-    }
-
-    // Enable or disable input controls based on time state
-    if (time.state === "running") {
-        enableInputControls(vehicle);
-    } else {
-        disableInputControls(vehicle);
-    }
-
-    const boundingBox = new THREE.Box3().setFromObject(car.children[0].children[0].children[0].children[0].children[0].children[0]);
-    const finishBox = new THREE.Box3().setFromObject(finish);
-    if(boundingBox.intersectsBox(finishBox)){
-        time.state = "stopped";
-    }
     
+        if (!window.keyIsPressed) {
+            const velocity = vehicle.chassisBody.velocity;
+            velocity.x *= (1 - frictionCoefficient);
+            velocity.z *= (1 - frictionCoefficient);
+        }
 
-    // Smooth camera follow the car
-    smoothCameraFollow(camera, car);
+        // Enable or disable input controls based on time state
+        if (time.state === "running") {
+            enableInputControls(vehicle);
+        } else {
+            disableInputControls(vehicle);
+        }
 
-    // Render the scene
-    renderer.render(scene, camera);
-};
-animate();
+        const boundingBox = new THREE.Box3().setFromObject(car.children[0].children[0].children[0].children[0].children[0].children[0]);
+        const finishBox = new THREE.Box3().setFromObject(finish);
+        if(boundingBox.intersectsBox(finishBox)){
+            time.state = "stopped";
+        }
+
+        smoothCameraFollow(camera, car);
+        renderer.render(scene, camera);
+    };
+    animate();
 };
 
 
