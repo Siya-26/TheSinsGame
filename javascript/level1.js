@@ -378,6 +378,8 @@ const createHouse = async (modelPath, scale, position, rotation = { x: 0, y: 0, 
 const create3DEnvironment = async () => {
     const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.shadowMap.enabled = true; // Enable shadow mapping
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap; // Set shadow map type
     document.body.appendChild(renderer.domElement);
 
     const camera = new THREE.PerspectiveCamera(
@@ -389,12 +391,10 @@ const create3DEnvironment = async () => {
     camera.position.set(0, 10, 0);
 
     const controls = new OrbitControls(camera, renderer.domElement);
-
     const scene = new THREE.Scene();
 
     loadSkybox(scene);
 
-    // B U I L D I N G   M E S H E S
     const plane = buildPlane();
     const model = await loadTrack();
     const car = await loadCarModel(scene);
@@ -505,7 +505,7 @@ const create3DEnvironment = async () => {
     scene.add(directionalLight);
 
     const cannonDebugger = new CannonDebugger(scene, physicsWorld);
-    const time = new Time(100, vehicle);
+    const time = new Time(60, vehicle);
     time.startTime();
 
   const waypoints = [
