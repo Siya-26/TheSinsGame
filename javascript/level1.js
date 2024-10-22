@@ -16,13 +16,14 @@ class Time {
 
     // Method to stop the timer and show the game-over screen if time runs out
     stopTime() {
-        if (this.time <= 0 && this.state === "running") {
+        if (this.time === 0 && this.state === "running") {
             clearInterval(this.timerInterval); // Stop the timer
             this.state = "stopped"; // Update the state
             window.location.href = 'lostScreen1.html'; // Redirect to lost screen
         }
     }
     
+
     // Method to start the main timer after the countdown finishes
     runTime() {
         this.state = "running"; // Update state to running
@@ -164,7 +165,6 @@ const disableInputControls = (vehicle) => {
         }
     });
 };
-
 // PHYSICS WORLD
 const physicsWorld = new CANNON.World({
     gravity: new CANNON.Vec3(0, -9.82, 0),
@@ -374,7 +374,6 @@ const createHouse = async (modelPath, scale, position, rotation = { x: 0, y: 0, 
     house.rotation.set(rotation.x, rotation.y, rotation.z); // Apply rotation
     return house;
 };
-
 // CREATE ENVIRONMENT
 const create3DEnvironment = async () => {
     const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -390,6 +389,7 @@ const create3DEnvironment = async () => {
     camera.position.set(0, 10, 0);
 
     const controls = new OrbitControls(camera, renderer.domElement);
+
     const scene = new THREE.Scene();
 
     loadSkybox(scene);
@@ -439,16 +439,28 @@ const create3DEnvironment = async () => {
     houses.push(await createHouse('../Models/shanty.glb', [0.2, 0.2, 0.2], [55, 0.1, -34], {x: 0, y: Math.PI / 2, z: 0 }));
     houses.push(await createHouse('../Models/shanty.glb', [0.2, 0.2, 0.2], [65, 0.1, -34], {x: 0, y: Math.PI / 2, z: 0 }));
 
+    houses.push(await createHouse('../Models/shanty.glb', [0.2, 0.2, 0.2], [-55, 0.1, 0], {x: 0, y: -Math.PI / 2, z: 0 }));
+    houses.push(await createHouse('../Models/shanty.glb', [0.2, 0.2, 0.2], [-45, 0.1, 0], {x: 0, y: -Math.PI / 2, z: 0 }));
+    houses.push(await createHouse('../Models/shanty.glb', [0.2, 0.2, 0.2], [-35, 0.1, 0], {x: 0, y: -Math.PI / 2, z: 0 }));
+    houses.push(await createHouse('../Models/shanty.glb', [0.2, 0.2, 0.2], [-25, 0.1, 0], {x: 0, y: -Math.PI / 2, z: 0 }));
+    houses.push(await createHouse('../Models/shanty.glb', [0.2, 0.2, 0.2], [-15, 0.1, 0], {x: 0, y: -Math.PI / 2, z: 0 }));
+    houses.push(await createHouse('../Models/shanty.glb', [0.2, 0.2, 0.2], [-5, 0.1, 0], {x: 0, y: -Math.PI / 2, z: 0 }));
+    houses.push(await createHouse('../Models/shanty.glb', [0.2, 0.2, 0.2], [5, 0.1, -10], {x: 0, y: -Math.PI / 2, z: 0 }));
+    houses.push(await createHouse('../Models/shanty.glb', [0.2, 0.2, 0.2], [15, 0.1, -15], {x: 0, y: -Math.PI / 2, z: 0 }));
+    houses.push(await createHouse('../Models/shanty.glb', [0.2, 0.2, 0.2], [25, 0.1, -15], {x: 0, y: -Math.PI / 2, z: 0 }));
 
     // Bar
 
-    houses.push(await createHouse('../Models/bar_shack.glb', [0.020, 0.020, 0.020], [10, 0.1, 11]));
+    houses.push(await createHouse('../Models/bar_shack.glb', [0.015, 0.015, 0.015], [10, 0.1, 11]));
 
     //Everything
+    // houses.push(await createHouse('../Models/tree.glb', [0.5, 0.5, 0.5], [-90, 0.1, 15], {x: 0, y: Math.PI / 2, z: 0}));
+    // houses.push(await createHouse('../Models/tree.glb', [0.5, 0.5, 0.5], [-90, 0.1, -5], {x: 0, y: Math.PI / 2, z: 0}));
+    // houses.push(await createHouse('../Models/tree.glb', [0.5, 0.5, 0.5], [-90, 0.1, 45], {x: 0, y: Math.PI / 2, z: 0}));
+
     houses.push(await createHouse('../Models/grass.glb', [2, 2, 2], [18, 0.1, 50]));
     houses.push(await createHouse('../Models/soccer_field.glb', [0.5, 0.5, 0.5], [50, 0.1, -10], {x: 0, y: Math.PI / 2, z: 0}));
     houses.push(await createHouse('../Models/playground.glb', [1.5, 1.5, 1.5], [85, 0.1, -30], {x: 0, y: Math.PI / 2, z: 0}));
-
 
     const track = model.children[0].children[7];
     const textureLoader = new THREE.TextureLoader();
@@ -468,45 +480,80 @@ const create3DEnvironment = async () => {
     // Add all houses to the scene
     houses.forEach(house => scene.add(house));
 
-   // L I G H T I N G
-   const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
-   scene.add(ambientLight);
+    // L I G H T I N G
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+    scene.add(ambientLight);
 
-   const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
-   directionalLight.position.set(10, 10, 10);
-   scene.add(directionalLight);
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+    directionalLight.position.set(10, 10, 10);
+    scene.add(directionalLight);
 
-   const cannonDebugger = new CannonDebugger(scene, physicsWorld);
-   const time = new Time(100); // Set your initial time here
-   time.startTime();
+    const cannonDebugger = new CannonDebugger(scene, physicsWorld);
+    const time = new Time(100, vehicle);
+    time.startTime();
 
-   const animate = () => {
-       window.requestAnimationFrame(animate);
-       physicsWorld.fixedStep();
-       cannonDebugger.update();
-       car.position.copy(vehicle.chassisBody.position);
-       car.quaternion.copy(vehicle.chassisBody.quaternion);
-       controls.update();
-       if (!window.keyIsPressed) {
-           const velocity = vehicle.chassisBody.velocity;
-           velocity.x *= (1 - frictionCoefficient);
-           velocity.z *= (1 - frictionCoefficient);
-       }
+  const waypoints = [
+    new THREE.Vector3(0, 0, 0),
+    new THREE.Vector3(10, 0, 0),
+    new THREE.Vector3(10, 0, 10),
+    new THREE.Vector3(0, 0, 10),
+    // Add more waypoints as needed
+];
 
-       if (time.state === "running") {
-           enableInputControls(vehicle);
-       } else {
-           disableInputControls(vehicle);
-       }
+// Track the current waypoint index and completed laps
+let currentWaypointIndex = 0;
+let completedLaps = 0;
 
-       // Smooth camera follow the car (chase view)
-       smoothCameraFollow(camera, car);
+// Function to check if the car is close to the next waypoint
+const checkWaypointProgress = (carPosition) => {
+    const currentWaypoint = waypoints[currentWaypointIndex];
+    const distance = carPosition.distanceTo(currentWaypoint);
 
-       // Render the scene
-       renderer.render(scene, camera);
-   };
+    if (distance < 1) { // If close enough to the waypoint
+        currentWaypointIndex++; // Move to the next waypoint
 
-   animate();
+        // If all waypoints are completed, reset to the start and increase lap count
+        if (currentWaypointIndex >= waypoints.length) {
+            currentWaypointIndex = 0; // Reset to first waypoint
+            completedLaps++; // Increase lap count
+            time.checkWinCondition(completedLaps); // Check for win condition
+        }
+    }
+};
+
+// Inside your animate function, after updating the car's position:
+const animate = () => {
+    window.requestAnimationFrame(animate);
+    physicsWorld.fixedStep();
+    cannonDebugger.update();
+    car.position.copy(vehicle.chassisBody.position);
+    car.quaternion.copy(vehicle.chassisBody.quaternion);
+    controls.update();
+
+    // Check car's position against waypoints
+    checkWaypointProgress(car.position);
+
+    // Existing friction handling
+    if (!window.keyIsPressed) {
+        const velocity = vehicle.chassisBody.velocity;
+        velocity.x *= (1 - frictionCoefficient);
+        velocity.z *= (1 - frictionCoefficient);
+    }
+
+    // Enable or disable input controls based on time state
+    if (time.state === "running") {
+        enableInputControls(vehicle);
+    } else {
+        disableInputControls(vehicle);
+    }
+
+    // Smooth camera follow the car
+    smoothCameraFollow(camera, car);
+
+    // Render the scene
+    renderer.render(scene, camera);
+};
+    animate();
 };
 
 window.keyIsPressed = false;
