@@ -471,7 +471,10 @@ const create3DEnvironment = async () => {
     // houses.push(await createHouse('../Models/tree.glb', [0.5, 0.5, 0.5], [-90, 0.1, -5], {x: 0, y: Math.PI / 2, z: 0}));
     // houses.push(await createHouse('../Models/tree.glb', [0.5, 0.5, 0.5], [-90, 0.1, 45], {x: 0, y: Math.PI / 2, z: 0}));
 
-    houses.push(await createHouse('../Models/grass.glb', [2, 2, 2], [18, 0.1, 50]));
+    houses.push(await createHouse('../Models/grass.glb', [2, 2, 2], [15, 0.1, 10]));
+    houses.push(await createHouse('../Models/grass.glb', [2, 2, 2], [15, 0.1, 20]));
+    houses.push(await createHouse('../Models/grass.glb', [2, 2, 2], [15, 0.1, 30]));
+
     houses.push(await createHouse('../Models/soccer_field.glb', [0.5, 0.5, 0.5], [50, 0.1, -10], {x: 0, y: Math.PI / 2, z: 0}));
     houses.push(await createHouse('../Models/playground.glb', [1.5, 1.5, 1.5], [85, 0.1, -30], {x: 0, y: Math.PI / 2, z: 0}));
 
