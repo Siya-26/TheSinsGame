@@ -19,19 +19,10 @@ class Time {
         if (this.time === 0 && this.state === "running") {
             clearInterval(this.timerInterval); // Stop the timer
             this.state = "stopped"; // Update the state
-            document.getElementById('stopwatch').innerHTML = `
-                <div class="screen">
-                    <div class="menu">
-                        <h1>Game Over!</h1>
-                        <p>Unfortunately, you have lost this level. Would you like to try again?</p>
-                        <div class="button-container">
-                            <button onclick="window.location.href='level1.html'">Try Again</button>
-                            <button onclick="window.location.href='mainMenu.html'">Cancel</button>
-                        </div>
-                    </div>
-                </div>`;
+            window.location.href = 'lostScreen1.html'; // Redirect to lost screen
         }
     }
+    
 
     // Method to start the main timer after the countdown finishes
     runTime() {
@@ -301,7 +292,7 @@ const loadCarModel = async (scene) => {
         const loader = new GLTFLoader();
         loader.load('../Models/mazda_rx7_stylised.glb', (gltf) => {
             const car = gltf.scene;
-            car.scale.set(0.0040, 0.0040, 0.0040);  // Scale car
+            car.scale.set(0.0030, 0.0030, 0.0030);  // Scale car
             car.position.set(1000, 1000, 1000);  // Position car
             car.rotateX(-90);  // Rotate car
             car.traverse((child) => {
@@ -365,6 +356,24 @@ window.addEventListener('keydown', (event) => {
     }
 });
 
+// Function to load a house model
+const loadHouseModel = async (path, scale, position) => {
+    return new Promise((resolve, reject) => {
+        const loader = new GLTFLoader();
+        loader.load(path, (gltf) => {
+            const house = gltf.scene;
+            house.scale.set(...scale); // Set scale using spread operator
+            house.position.set(...position); // Set position using spread operator
+            resolve(house);
+        }, undefined, (error) => reject(error));
+    });
+};
+
+const createHouse = async (modelPath, scale, position, rotation = { x: 0, y: 0, z: 0 }) => {
+    const house = await loadHouseModel(modelPath, scale, position);
+    house.rotation.set(rotation.x, rotation.y, rotation.z); // Apply rotation
+    return house;
+};
 // CREATE ENVIRONMENT
 const create3DEnvironment = async () => {
     const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -389,6 +398,35 @@ const create3DEnvironment = async () => {
     const plane = buildPlane();
     const model = await loadTrack();
     const car = await loadCarModel(scene);
+    
+    // Create an array to hold house models
+    const houses = [];
+    
+    // Load houses and add them to the array
+    //Tiny House
+
+    houses.push(await createHouse('../Models/tiny_house.glb', [1, 1, 1], [-10, 0.1, 25]));
+    houses.push(await createHouse('../Models/tiny_house.glb', [1, 1, 1], [-20, 0.1, 25]));
+    houses.push(await createHouse('../Models/tiny_house.glb', [1, 1, 1], [-30, 0.1, 35]));
+    houses.push(await createHouse('../Models/tiny_house.glb', [1, 1, 1], [-35, 0.1, 25]));
+    houses.push(await createHouse('../Models/tiny_house.glb', [1, 1, 1], [0, 0.1, 15]));
+
+    //Shanty House
+
+    houses.push(await createHouse('../Models/shanty.glb', [0.2, 0.2, 0.2], [5, 0.1, -34], {x: 0, y: Math.PI / 2, z: 0 }));
+    houses.push(await createHouse('../Models/shanty.glb', [0.2, 0.2, 0.2], [15, 0.1, -34], {x: 0, y: Math.PI / 2, z: 0 }));
+    houses.push(await createHouse('../Models/shanty.glb', [0.2, 0.2, 0.2], [25, 0.1, -34], {x: 0, y: Math.PI / 2, z: 0 }));
+
+    // Bar
+
+    houses.push(await createHouse('../Models/bar_shack.glb', [0.020, 0.020, 0.020], [10, 0.1, 11]));
+
+    //Everything else
+    houses.push(await createHouse('../Models/grass.glb', [2, 2, 2], [18, 0.1, 50]));
+    houses.push(await createHouse('../Models/tiny_house.glb', [1, 1, 1], [25, 0.1, 22]));
+
+
+
     const track = model.children[0].children[7];
     const textureLoader = new THREE.TextureLoader();
     const trackTexture = textureLoader.load('../Models/road.jpg');
@@ -398,11 +436,14 @@ const create3DEnvironment = async () => {
     track.material[5].emissive = 0xffffff;
     const t = model.children[0].children[7];
     boundaries(t.geometry.attributes.position.array);
-    //console.log(t.geometry.attributes.position.array.length);
 
+    // Add the plane, track, car to the scene
     scene.add(plane);
     scene.add(track);
     scene.add(car);
+
+    // Add all houses to the scene
+    houses.forEach(house => scene.add(house));
 
     // L I G H T I N G
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
@@ -413,7 +454,7 @@ const create3DEnvironment = async () => {
     scene.add(directionalLight);
 
     const cannonDebugger = new CannonDebugger(scene, physicsWorld);
-    const time = new Time(15, vehicle);
+    const time = new Time(100, vehicle);
     time.startTime();
 
     const animate = () => {
@@ -429,11 +470,9 @@ const create3DEnvironment = async () => {
             velocity.z *= (1 - frictionCoefficient);
         }
 
-        if(time.state == "running"){
+        if (time.state === "running") {
             enableInputControls(vehicle);
-        }
-        else{
-            console.log("D")
+        } else {
             disableInputControls(vehicle);
         }
 
