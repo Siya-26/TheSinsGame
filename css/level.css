@@ -1,0 +1,13 @@
+body {
+  margin: 0;
+  overflow: hidden; /* Hide scrollbars */
+  display: flex;
+  height: 100vh; /* Full height */
+  width: 100vw;  /* Full width */
+}
+
+canvas {
+  display: block;
+  width: 100%;  /* Ensure canvas fills width */
+  height: 100%; /* Ensure canvas fills height */
+}
