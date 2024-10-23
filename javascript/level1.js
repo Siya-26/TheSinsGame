@@ -1,11 +1,11 @@
 import * as THREE from 'three';
+import { Camera } from './camera';
+import { Renderer } from './renderer';
+import { Game } from './game';
+import { Physics, Vehicle } from './physics';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader.js';
-import * as CANNON from 'cannon-es';
-import CannonDebugger from 'cannon-es-debugger';
-import { Game } from './game';
-import { Physics, Vehicle } from './physics';
 const loader = new FBXLoader();
 
 
@@ -49,69 +49,33 @@ const createHouse = async (modelPath, scale, position, rotation = { x: 0, y: 0, 
 };
 
 const loadHouses = async (houses) => {
-    houses.push(await createHouse('../Models/tiny_house.glb', [0.6, 0.6, 0.6], [-10, 0.1, 25]));
-    houses.push(await createHouse('../Models/tiny_house.glb', [0.6, 0.6, 0.6], [-20, 0.1, 25]));
-    houses.push(await createHouse('../Models/tiny_house.glb', [0.6, 0.6, 0.6], [0, 0.1, 15]));
-    houses.push(await createHouse('../Models/tiny_house.glb', [0.6, 0.6, 0.6], [15, 0.1, 10]));
-    houses.push(await createHouse('../Models/tiny_house.glb', [0.6, 0.6, 0.6], [20, 0.1, 15]));
-    houses.push(await createHouse('../Models/tiny_house.glb', [0.6, 0.6, 0.6], [25, 0.1, 18]));
-    houses.push(await createHouse('../Models/tiny_house.glb', [0.6, 0.6, 0.6], [30, 0.1, 15]));
-    houses.push(await createHouse('../Models/tiny_house.glb', [0.6, 0.6, 0.6], [35, 0.1, 22]));
-    houses.push(await createHouse('../Models/tiny_house.glb', [0.6, 0.6, 0.6], [40, 0.1, 22]));
-    houses.push(await createHouse('../Models/tiny_house.glb', [0.6, 0.6, 0.6], [45, 0.1, 22]));
-    houses.push(await createHouse('../Models/tiny_house.glb', [0.6, 0.6, 0.6], [50, 0.1, 21]));
-    houses.push(await createHouse('../Models/tiny_house.glb', [0.6, 0.6, 0.6], [55, 0.1, 20]));
-    houses.push(await createHouse('../Models/tiny_house.glb', [0.6, 0.6, 0.6], [60, 0.1, 19]));
-    houses.push(await createHouse('../Models/tiny_house.glb', [0.6, 0.6, 0.6], [65, 0.1, 15]));
 
-    houses.push(await createHouse('../Models/tiny_house.glb', [0.6, 0.6, 0.6], [-30, 0.1, 30], {x: 0, y: Math.PI, z: 0 }));
-    houses.push(await createHouse('../Models/tiny_house.glb', [0.6, 0.6, 0.6], [-35, 0.1, 25], {x: 0, y: Math.PI, z: 0 }));
-    houses.push(await createHouse('../Models/tiny_house.glb', [0.6, 0.6, 0.6], [15, 0.1, 30], {x: 0, y: Math.PI, z: 0 }));
-    houses.push(await createHouse('../Models/tiny_house.glb', [0.6, 0.6, 0.6], [20, 0.1, 33], {x: 0, y: Math.PI, z: 0 }));
-    houses.push(await createHouse('../Models/tiny_house.glb', [0.6, 0.6, 0.6], [25, 0.1, 33], {x: 0, y: Math.PI, z: 0 }));
-    houses.push(await createHouse('../Models/tiny_house.glb', [0.6, 0.6, 0.6], [30, 0.1, 33], {x: 0, y: Math.PI, z: 0 }));
-    houses.push(await createHouse('../Models/tiny_house.glb', [0.6, 0.6, 0.6], [35, 0.1, 33], {x: 0, y: Math.PI, z: 0 }));
-    houses.push(await createHouse('../Models/tiny_house.glb', [0.6, 0.6, 0.6], [40, 0.1, 33], {x: 0, y: Math.PI, z: 0 }));
-    houses.push(await createHouse('../Models/tiny_house.glb', [0.6, 0.6, 0.6], [45, 0.1, 33], {x: 0, y: Math.PI, z: 0 }));
-    houses.push(await createHouse('../Models/tiny_house.glb', [0.6, 0.6, 0.6], [50, 0.1, 33], {x: 0, y: Math.PI, z: 0 }));
-    houses.push(await createHouse('../Models/tiny_house.glb', [0.6, 0.6, 0.6], [55, 0.1, 33], {x: 0, y: Math.PI, z: 0 }));
-    houses.push(await createHouse('../Models/tiny_house.glb', [0.6, 0.6, 0.6], [60, 0.1, 33], {x: 0, y: Math.PI, z: 0 }));
-    houses.push(await createHouse('../Models/tiny_house.glb', [0.6, 0.6, 0.6], [65, 0.1, 33], {x: 0, y: Math.PI, z: 0 }));
+    const positions = [[-10, 0.1, 25],[-20, 0.1, 25],[0, 0.1, 15],[15, 0.1, 10],[20, 0.1, 15],[25, 0.1, 18],[30, 0.1, 15],[35, 0.1, 22],[40, 0.1, 22],[45, 0.1, 22],[50, 0.1, 21], [55, 0.1, 20], [60, 0.1, 19] ,[65, 0.1, 15]];
+    positions.forEach( async (position) => {
+        houses.push(await createHouse('../Models/tiny_house.glb', [0.6, 0.6, 0.6], position));
+    })
+
+    const positionsB = [[-30, 0.1, 30],[-35, 0.1, 25],[15, 0.1, 30],[20, 0.1, 33],[25, 0.1, 33],[30, 0.1, 33],[35, 0.1, 33],[40, 0.1, 33],[45, 0.1, 33],[50, 0.1, 33],[55, 0.1, 33],[60, 0.1, 33],[65, 0.1, 33]];
+
+    positionsB.forEach( async (position) => {
+        houses.push(await createHouse('../Models/tiny_house.glb', [0.6, 0.6, 0.6], position, {x: 0, y: Math.PI, z: 0 }));
+    })
 
 
-    //Shanty House
-    houses.push(await createHouse('../Models/shanty.glb', [0.2, 0.2, 0.2], [-75, 0.1, -15], {x: 0, y: Math.PI / 2, z: 0 }));
-    houses.push(await createHouse('../Models/shanty.glb', [0.2, 0.2, 0.2], [-65, 0.1, -20], {x: 0, y: Math.PI / 2, z: 0 }));
-    houses.push(await createHouse('../Models/shanty.glb', [0.2, 0.2, 0.2], [-55, 0.1, -20], {x: 0, y: Math.PI / 2, z: 0 }));
-    houses.push(await createHouse('../Models/shanty.glb', [0.2, 0.2, 0.2], [-45, 0.1, -20], {x: 0, y: Math.PI / 2, z: 0 }));
-    houses.push(await createHouse('../Models/shanty.glb', [0.2, 0.2, 0.2], [-35, 0.1, -20], {x: 0, y: Math.PI / 2, z: 0 }));
-    houses.push(await createHouse('../Models/shanty.glb', [0.2, 0.2, 0.2], [-25, 0.1, -20], {x: 0, y: Math.PI / 2, z: 0 }));
-    houses.push(await createHouse('../Models/shanty.glb', [0.2, 0.2, 0.2], [-15, 0.1, -20], {x: 0, y: Math.PI / 2, z: 0 }));
-    houses.push(await createHouse('../Models/shanty.glb', [0.2, 0.2, 0.2], [-5, 0.1, -25], {x: 0, y: Math.PI / 2, z: 0 }));
-    houses.push(await createHouse('../Models/shanty.glb', [0.2, 0.2, 0.2], [5, 0.1, -34], {x: 0, y: Math.PI / 2, z: 0 }));
-    houses.push(await createHouse('../Models/shanty.glb', [0.2, 0.2, 0.2], [15, 0.1, -34], {x: 0, y: Math.PI / 2, z: 0 }));
-    houses.push(await createHouse('../Models/shanty.glb', [0.2, 0.2, 0.2], [25, 0.1, -34], {x: 0, y: Math.PI / 2, z: 0 }));
-    houses.push(await createHouse('../Models/shanty.glb', [0.2, 0.2, 0.2], [35, 0.1, -34], {x: 0, y: Math.PI / 2, z: 0 }));
-    houses.push(await createHouse('../Models/shanty.glb', [0.2, 0.2, 0.2], [45, 0.1, -34], {x: 0, y: Math.PI / 2, z: 0 }));
-    houses.push(await createHouse('../Models/shanty.glb', [0.2, 0.2, 0.2], [55, 0.1, -34], {x: 0, y: Math.PI / 2, z: 0 }));
-    houses.push(await createHouse('../Models/shanty.glb', [0.2, 0.2, 0.2], [65, 0.1, -34], {x: 0, y: Math.PI / 2, z: 0 }));
+    const positionsC = [[-75, 0.1, -15],[-65, 0.1, -20],[-55, 0.1, -20],[-45, 0.1, -20],[-35, 0.1, -20],[-25, 0.1, -20],[-15, 0.1, -20],[-5, 0.1, -25],[5, 0.1, -34],[15, 0.1, -34],[25, 0.1, -34],[35, 0.1, -34],[45, 0.1, -34],[55, 0.1, -34],[65, 0.1, -34],[-55, 0.1, 0],[-45, 0.1, 0],[-35, 0.1, 0],[-25, 0.1, 0],[-15, 0.1, 0],[-5, 0.1, 0],[5, 0.1, -10],[15, 0.1, -15],[25, 0.1, -15]];
+    positionsC.forEach( async (position) => {
+        houses.push(await createHouse('../Models/shanty.glb', [0.2, 0.2, 0.2], position, {x: 0, y: Math.PI / 2, z: 0 }));
+    })
 
-    houses.push(await createHouse('../Models/shanty.glb', [0.2, 0.2, 0.2], [-55, 0.1, 0], {x: 0, y: -Math.PI / 2, z: 0 }));
-    houses.push(await createHouse('../Models/shanty.glb', [0.2, 0.2, 0.2], [-45, 0.1, 0], {x: 0, y: -Math.PI / 2, z: 0 }));
-    houses.push(await createHouse('../Models/shanty.glb', [0.2, 0.2, 0.2], [-35, 0.1, 0], {x: 0, y: -Math.PI / 2, z: 0 }));
-    houses.push(await createHouse('../Models/shanty.glb', [0.2, 0.2, 0.2], [-25, 0.1, 0], {x: 0, y: -Math.PI / 2, z: 0 }));
-    houses.push(await createHouse('../Models/shanty.glb', [0.2, 0.2, 0.2], [-15, 0.1, 0], {x: 0, y: -Math.PI / 2, z: 0 }));
-    houses.push(await createHouse('../Models/shanty.glb', [0.2, 0.2, 0.2], [-5, 0.1, 0], {x: 0, y: -Math.PI / 2, z: 0 }));
-    houses.push(await createHouse('../Models/shanty.glb', [0.2, 0.2, 0.2], [5, 0.1, -10], {x: 0, y: -Math.PI / 2, z: 0 }));
-    houses.push(await createHouse('../Models/shanty.glb', [0.2, 0.2, 0.2], [15, 0.1, -15], {x: 0, y: -Math.PI / 2, z: 0 }));
-    houses.push(await createHouse('../Models/shanty.glb', [0.2, 0.2, 0.2], [25, 0.1, -15], {x: 0, y: -Math.PI / 2, z: 0 }));
+    const positionsD = [[15, 0.1, 10],[15, 0.1, 20],[15, 0.1, 30]];
+    positionsD.forEach( async (position) => {
+        houses.push(await createHouse('../Models/grass.glb', [2, 2, 2], position));
+    })
 
     houses.push(await createHouse('../Models/bar_shack.glb', [0.015, 0.015, 0.015], [10, 0.1, 11]));
-    houses.push(await createHouse('../Models/grass.glb', [2, 2, 2], [15, 0.1, 10]));
-    houses.push(await createHouse('../Models/grass.glb', [2, 2, 2], [15, 0.1, 20]));
-    houses.push(await createHouse('../Models/grass.glb', [2, 2, 2], [15, 0.1, 30]));
     houses.push(await createHouse('../Models/soccer_field.glb', [0.5, 0.5, 0.5], [50, 0.1, -10], {x: 0, y: Math.PI / 2, z: 0}));
     houses.push(await createHouse('../Models/playground.glb', [1.5, 1.5, 1.5], [85, 0.1, -30], {x: 0, y: Math.PI / 2, z: 0}));
+    
 }
 
 const loadTrackModel = () => {
@@ -158,7 +122,7 @@ const loadCarModel = async (scene) => {
     });
 };
 
-const loadSkybox = (scene) => {
+const addSkybox = (scene) => {
     const loader = new THREE.CubeTextureLoader();
     const texture = loader.load([
         '../skybox/px.png', // Right
@@ -172,67 +136,7 @@ const loadSkybox = (scene) => {
     scene.background = texture; // Set the skybox as the scene background
 };
 
-// CAMERA FUNCTIONS
-
-let isFirstPerson = false;
-const smoothFactor = 0.2;
-const fixedCameraY = 2;
-const thirdPersonOffset = new THREE.Vector3(-3, 2, 0);
-const firstPersonOffset = new THREE.Vector3(1, 1, 0);
-
-const smoothCameraFollow = (camera, car) => {
-    if (isFirstPerson) {
-        // 1st person view: Position camera inside the car
-        const targetPosition = car.position.clone().add(firstPersonOffset);
-        camera.position.lerp(targetPosition, smoothFactor);
-    } else {
-        // 3rd person view: Chase view logic
-        const carDirection = new THREE.Vector3();
-        car.getWorldDirection(carDirection); // Get the car's forward direction
-        const carRight = new THREE.Vector3().crossVectors(carDirection, new THREE.Vector3(0, 1, 0)).normalize(); // Get the right direction of the car
-        
-        const targetPosition = car.position
-            .clone()
-            .add(carRight.clone().multiplyScalar(thirdPersonOffset.x)) // Move to the side
-            .setY(fixedCameraY); // Set a fixed height for the camera
-
-        camera.position.lerp(targetPosition, smoothFactor);
-    }
-
-    // Always make the camera look at the car
-    camera.lookAt(car.position);
-};
-
-window.addEventListener('keydown', (event) => {
-    if (event.key === 'p' || event.key === 'P') {
-        isFirstPerson = !isFirstPerson; // Toggle between 1st and 3rd person
-    }
-});
-
-const create3DEnvironment = async () => {
-    // PHYSICS
-    const physicsWorld = new Physics();
-    const physicsCar = new Vehicle();
-    const vehicle = physicsCar.vehicle;
-    physicsCar.createVehicle();
-    vehicle.addToWorld(physicsWorld.physicsWorld);
-
-
-
-    // SCENE + CAMERA + RENDERER
-    const renderer = new THREE.WebGLRenderer({ antialias: true });
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-    document.body.appendChild(renderer.domElement);
-    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 100,);
-    camera.position.set(0, 10, 0);
-    const controls = new OrbitControls(camera, renderer.domElement);
-    const scene = new THREE.Scene();
-
-
-    // LOAD MODELS 
-    loadSkybox(scene);
+const loadModels = async (scene, physicsWorld) => {
     const plane = buildPlane();
     const car = await loadCarModel(scene);
     const track = await loadTrack(physicsWorld);
@@ -240,56 +144,64 @@ const create3DEnvironment = async () => {
     const houses = [];
     await loadHouses(houses);
     const finish = finishPlane();
+    return { plane, car, track, houses, finish };
+}
 
 
-    // SCENE ADD
+const create3DEnvironment = async () => {
+    const camera = new Camera(75, window.innerWidth / window.innerHeight, 0.1, 100);
+    const renderer = new Renderer();
+    const scene = new THREE.Scene();
+    const controls = new OrbitControls(camera.camera, renderer.domElement);
+    const physicsWorld = new Physics();
+    const physicsCar = new Vehicle();
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+    const vehicle = physicsCar.vehicle;
+    const game = new Game(100, vehicle);
+    const { plane, car, track, houses, finish } = await loadModels(scene, physicsWorld);
+
+
+    physicsCar.createVehicle();
+    vehicle.addToWorld(physicsWorld.physicsWorld);
+    directionalLight.position.set(10, 10, 10);
+    camera.setPosition(0, 10, 0);
+    renderer.setUpRenderer();
+
+    
     scene.add(finish);
     scene.add(plane);
     scene.add(track);
     scene.add(car);
+    scene.add(ambientLight);
+    scene.add(directionalLight);
+    addSkybox(scene);
     houses.forEach(house => scene.add(house));
 
 
-    // L I G H T I N G
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
-    scene.add(ambientLight);
-    const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
-    directionalLight.position.set(10, 10, 10);
-    scene.add(directionalLight);
-
-    // OTHERS
-    const cannonDebugger = new CannonDebugger(scene, physicsWorld.physicsWorld);
-    const game = new Game(100, vehicle);
     game.startTime();
 
-
     const animate = () => {
-        window.requestAnimationFrame(animate);
-        physicsWorld.physicsWorld.fixedStep();
-        cannonDebugger.update();
-        car.position.copy(vehicle.chassisBody.position);
-        car.quaternion.copy(vehicle.chassisBody.quaternion);
-        controls.update();
-
-
-        game.checkState();
-        
-
         const boundingBox = new THREE.Box3().setFromObject(car.children[0].children[0].children[0].children[0].children[0].children[0]);
         const finishBox = new THREE.Box3().setFromObject(finish);
+
+
+        window.requestAnimationFrame(animate);
+        physicsWorld.physicsWorld.fixedStep();
+        game.checkState();
+        controls.update();
+        car.position.copy(vehicle.chassisBody.position);
+        car.quaternion.copy(vehicle.chassisBody.quaternion);
+        camera.smoothCameraFollow(car);
+        renderer.renderer.render(scene, camera.camera);
+
+
         if(boundingBox.intersectsBox(finishBox)){
             game.state = "stopped";
         }
-
-        smoothCameraFollow(camera, car);
-        renderer.render(scene, camera);
     };
     animate();
 };
 
-
-window.keyIsPressed = false;
-window.addEventListener('keydown', () => { window.keyIsPressed = true; });
-window.addEventListener('keyup', () => { window.keyIsPressed = false; });
 
 create3DEnvironment();

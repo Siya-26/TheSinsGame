@@ -1,4 +1,5 @@
 import * as CANNON from 'cannon-es';
+import CannonDebugger from 'cannon-es-debugger';
 
 
 class Physics{
@@ -47,6 +48,12 @@ class Physics{
         this.addGround();
         this.addBoundaries();
     }
+
+
+    displayWorld(scene){
+        const cannonDebugger = new CannonDebugger(scene, this.physicsWorld);
+        cannonDebugger.update();
+    }
 }
 
 class Vehicle{
@@ -66,6 +73,7 @@ class Vehicle{
         this.wheelBody4;
     }
 
+
     addWheel(position){
         const wheelBody = new CANNON.Body({
             mass: 2,
@@ -82,12 +90,14 @@ class Vehicle{
         return wheelBody;
     };
 
+
     addWheels(){
         this.wheelBody1 = this.addWheel({ x: -1, z: 1 });
         this.wheelBody2 = this.addWheel({ x: -1, z: -1 });
         this.wheelBody3 = this.addWheel({ x: 1, z: -1 });
         this.wheelBody4 = this.addWheel({ x: 1, z: 1 });
     }
+
 
     getWheels() {
         return {
@@ -97,6 +107,7 @@ class Vehicle{
             wheelBody4: this.wheelBody4,
         };
     }
+
 
     createVehicle(){
         this.addWheels();

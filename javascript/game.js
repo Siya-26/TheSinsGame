@@ -7,7 +7,7 @@ class Game {
         this.countdownInterval = null;
         this.timerInterval = null;
         this.maxSteerVal = Math.PI / 8;
-        this.maxForce = 10;
+        this.maxForce = 15;
         this.frictionCoefficient = 0.05;
     }
 
