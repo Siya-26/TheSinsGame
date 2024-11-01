@@ -502,7 +502,7 @@ const create3DEnvironment = async () => {
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
     const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
     const vehicle = physicsCar.vehicle;
-    const game = new Game(500, vehicle);
+    const game = new Game(200, vehicle);
     const { plane, car, track, houses, finish, grass } = await loadModels(scene, physicsWorld);
 
 
