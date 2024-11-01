@@ -445,6 +445,7 @@ const createHouse = async (
   house.rotation.set(rotation.x, rotation.y, rotation.z); // Apply rotation
   return house;
 };
+
 // CREATE ENVIRONMENT
 const create3DEnvironment = async () => {
   const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -838,11 +839,6 @@ const create3DEnvironment = async () => {
     )
   );
 
-  // Additional Warehouse Buildings - this should be some adverse object
-  // building.push(await createHouse('../Models/tree.glb', [0.2, 0.2, 0.2], [35, 0.1, -20], {x: 0, y: -Math.PI / 2, z: 0 }));
-  // building.push(await createHouse('../Models/tree.glb', [0.2, 0.2, 0.2], [45, 0.1, -25], {x: 0, y: -Math.PI / 2, z: 0 }));
-  // building.push(await createHouse('../Models/crates_set.glb', [0.2, 0.2, 0.2], [55, 0.1, -30], {x: 0, y: -Math.PI / 2, z: 0 }));
-
   building.push(
     await createHouse(
       "../Models/warehouse_building.glb",
@@ -1009,6 +1005,7 @@ const create3DEnvironment = async () => {
     // Render the scene
     renderer.render(scene, camera);
   };
+
   animate();
 };
 
