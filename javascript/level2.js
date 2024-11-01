@@ -19,10 +19,10 @@ class Time {
     if (this.time === 0 && this.state === "running") {
       clearInterval(this.timerInterval); // Stop the timer
       this.state = "stopped"; // Update the state
-      window.location.href = "lostScreen3.html"; // Redirect to lost screen
+      window.location.href = "lostScreen2.html"; // Redirect to lost screen
     } else if (this.time != 0 && this.state === "stopped") {
       clearInterval(this.countdownInterval);
-      window.location.href = "../html/winScreen3.html";
+      window.location.href = "../html/winScreen2.html";
     }
   }
 
@@ -55,7 +55,7 @@ class Time {
 // GAME PARAMETERS
 const maxSteerVal = Math.PI / 8;
 const maxForce = 10;
-const frictionCoefficient = 0.02;
+const frictionCoefficient = 0.05;
 const thirdPersonView = {
   fieldOfView: 75,
   aspect: window.innerWidth / window.innerHeight,
@@ -283,23 +283,9 @@ const buildPlane = () => {
   const roadWidth = 256;
   const roadLength = 256;
   const geometry = new THREE.PlaneGeometry(roadWidth, roadLength);
-
-  // Load and apply an icy texture
-  const textureLoader = new THREE.TextureLoader();
-  const iceTexture = textureLoader.load("../Textures/ice.png"); // Use an ice texture of your choice
-  iceTexture.wrapS = THREE.RepeatWrapping;
-  iceTexture.wrapT = THREE.RepeatWrapping;
-  iceTexture.repeat.set(4, 4);
-
-  const material = new THREE.MeshStandardMaterial({
-    map: iceTexture,
-    roughness: 0,
-    metalness: 0.1,
-  });
-
+  const material = new THREE.MeshBasicMaterial({ color: 0xcccccc });
   const plane = new THREE.Mesh(geometry, material);
   plane.rotation.x = -Math.PI / 2;
-  plane.receiveShadow = true;
   return plane;
 };
 
@@ -307,18 +293,7 @@ const finishPlane = () => {
   const roadWidth = 8;
   const roadLength = 2;
   const geometry = new THREE.PlaneGeometry(roadWidth, roadLength);
-  const textureLoader = new THREE.TextureLoader();
-  const iceTexture = textureLoader.load("../Textures/ice.png"); // Path to your icy texture
-  iceTexture.wrapS = THREE.RepeatWrapping;
-  iceTexture.wrapT = THREE.RepeatWrapping;
-  iceTexture.repeat.set(4, 4);
-
-  const material = new THREE.MeshStandardMaterial({
-    map: iceTexture,
-    color: 0xffffff,
-    roughness: 0.3,
-    metalness: 0.6,
-  });
+  const material = new THREE.MeshBasicMaterial({ color: 0xcccccc });
   const plane = new THREE.Mesh(geometry, material);
   plane.position.set(45, 0.1, 27.25);
   plane.rotation.y = -Math.PI / 2;
@@ -347,7 +322,6 @@ const loadCarModel = async (scene) => {
         const car = gltf.scene;
         car.scale.set(0.003, 0.003, 0.003); // Scale car
         car.position.set(1000, 1000, 1000); // Position car
-        car.position.y += 0.05; // Slightly raises car above the track to avoid z-fighting
         car.rotateX(-90); // Rotate car
         car.traverse((child) => {
           if (child.isMesh) {
@@ -462,421 +436,432 @@ const create3DEnvironment = async () => {
   camera.position.set(0, 10, 0);
 
   const controls = new OrbitControls(camera, renderer.domElement);
-  controls.enableZoom = true; // Enable zooming
-  controls.minDistance = 5; // Set minimum zoom distance
-  controls.maxDistance = 100; // Set maximum zoom distance
   const scene = new THREE.Scene();
 
   loadSkybox(scene);
-
-  const createSnow = () => {
-    const snowCount = 1500; // Number of snow particles
-    const snowGeometry = new THREE.BufferGeometry();
-    const snowPositions = [];
-
-    for (let i = 0; i < snowCount; i++) {
-      snowPositions.push(
-        Math.random() * 200 - 100, // X position
-        Math.random() * 200, // Y position (falling height)
-        Math.random() * 200 - 100 // Z position
-      );
-    }
-
-    snowGeometry.setAttribute(
-      "position",
-      new THREE.Float32BufferAttribute(snowPositions, 3)
-    );
-
-    const snowMaterial = new THREE.PointsMaterial({
-      color: 0xffffff, // White color for snow
-      size: 0.2, // Adjust size for a snowflake effect
-      transparent: true,
-      opacity: 0.8,
-    });
-
-    const snow = new THREE.Points(snowGeometry, snowMaterial);
-    scene.add(snow);
-
-    // Animate snow fall
-    function animateSnow() {
-      const positions = snow.geometry.attributes.position.array;
-      for (let i = 1; i < positions.length; i += 3) {
-        positions[i] -= 0.1; // Fall speed for snow
-        if (positions[i] < 0) positions[i] = 200; // Reset to top for continuous fall
-      }
-      snow.geometry.attributes.position.needsUpdate = true;
-    }
-
-    return animateSnow;
-  };
-
-  // Add rain animation call in the animate loop
-  const animateSnow = createSnow();
-  scene.fog = new THREE.FogExp2(0x9db3b5, 0.02);
 
   const plane = buildPlane();
   const model = await loadTrack();
   const car = await loadCarModel(scene);
 
   // Create an array to hold house models
-  const building = [];
+  const houses = [];
 
-  // Old Buildings
-  building.push(
+  // Load houses and add them to the array
+  //Tiny House
+
+  houses.push(
     await createHouse(
-      "../Models/old_building__lowpoly.glb",
+      "../Models/tiny_house.glb",
       [0.6, 0.6, 0.6],
-      [20, 0.1, 8]
+      [-10, 0.1, 25]
     )
   );
-  building.push(
+  houses.push(
     await createHouse(
-      "../Models/old_building__lowpoly.glb",
+      "../Models/tiny_house.glb",
       [0.6, 0.6, 0.6],
-      [25, 0.1, 12]
+      [-20, 0.1, 25]
     )
   );
-  building.push(
+  houses.push(
+    await createHouse("../Models/tiny_house.glb", [0.6, 0.6, 0.6], [0, 0.1, 15])
+  );
+  houses.push(
     await createHouse(
-      "../Models/old_building__lowpoly.glb",
+      "../Models/tiny_house.glb",
       [0.6, 0.6, 0.6],
-      [30, 0.1, 10]
+      [15, 0.1, 10]
     )
   );
-  building.push(
+  houses.push(
     await createHouse(
-      "../Models/old_building__lowpoly.glb",
+      "../Models/tiny_house.glb",
       [0.6, 0.6, 0.6],
-      [35, 0.1, 18]
+      [20, 0.1, 15]
     )
   );
-  building.push(
+  houses.push(
     await createHouse(
-      "../Models/old_building__lowpoly.glb",
+      "../Models/tiny_house.glb",
       [0.6, 0.6, 0.6],
-      [40, 0.1, 20]
+      [25, 0.1, 18]
     )
   );
-  building.push(
+  houses.push(
     await createHouse(
-      "../Models/old_building__lowpoly.glb",
+      "../Models/tiny_house.glb",
       [0.6, 0.6, 0.6],
-      [45, 0.1, 18]
+      [30, 0.1, 15]
     )
   );
-  building.push(
+  houses.push(
     await createHouse(
-      "../Models/old_building__lowpoly.glb",
+      "../Models/tiny_house.glb",
       [0.6, 0.6, 0.6],
-      [50, 0.1, 15]
+      [35, 0.1, 22]
     )
   );
-  building.push(
+  houses.push(
     await createHouse(
-      "../Models/old_building__lowpoly.glb",
+      "../Models/tiny_house.glb",
       [0.6, 0.6, 0.6],
-      [55, 0.1, 15]
+      [40, 0.1, 22]
     )
   );
-  building.push(
+  houses.push(
     await createHouse(
-      "../Models/old_building__lowpoly.glb",
+      "../Models/tiny_house.glb",
       [0.6, 0.6, 0.6],
-      [60, 0.1, 15]
+      [45, 0.1, 22]
     )
   );
-  building.push(
+  houses.push(
     await createHouse(
-      "../Models/old_building__lowpoly.glb",
+      "../Models/tiny_house.glb",
       [0.6, 0.6, 0.6],
-      [65, 0.1, 10]
+      [50, 0.1, 21]
+    )
+  );
+  houses.push(
+    await createHouse(
+      "../Models/tiny_house.glb",
+      [0.6, 0.6, 0.6],
+      [55, 0.1, 20]
+    )
+  );
+  houses.push(
+    await createHouse(
+      "../Models/tiny_house.glb",
+      [0.6, 0.6, 0.6],
+      [60, 0.1, 19]
+    )
+  );
+  houses.push(
+    await createHouse(
+      "../Models/tiny_house.glb",
+      [0.6, 0.6, 0.6],
+      [65, 0.1, 15]
     )
   );
 
-  // Rotated Old Buildings
-  building.push(
+  houses.push(
     await createHouse(
-      "../Models/old_building__lowpoly.glb",
+      "../Models/tiny_house.glb",
       [0.6, 0.6, 0.6],
-      [-30, 0.1, 35],
+      [-30, 0.1, 30],
       { x: 0, y: Math.PI, z: 0 }
     )
   );
-  building.push(
+  houses.push(
     await createHouse(
-      "../Models/old_building__lowpoly.glb",
+      "../Models/tiny_house.glb",
       [0.6, 0.6, 0.6],
-      [-35, 0.1, 33],
+      [-35, 0.1, 25],
       { x: 0, y: Math.PI, z: 0 }
     )
   );
-  building.push(
+  houses.push(
     await createHouse(
-      "../Models/old_building__lowpoly.glb",
+      "../Models/tiny_house.glb",
       [0.6, 0.6, 0.6],
       [15, 0.1, 30],
       { x: 0, y: Math.PI, z: 0 }
     )
   );
-  building.push(
+  houses.push(
     await createHouse(
-      "../Models/old_building__lowpoly.glb",
+      "../Models/tiny_house.glb",
       [0.6, 0.6, 0.6],
       [20, 0.1, 33],
       { x: 0, y: Math.PI, z: 0 }
     )
   );
-  building.push(
+  houses.push(
     await createHouse(
-      "../Models/old_building__lowpoly.glb",
+      "../Models/tiny_house.glb",
       [0.6, 0.6, 0.6],
-      [25, 0.1, 35],
+      [25, 0.1, 33],
       { x: 0, y: Math.PI, z: 0 }
     )
   );
-  building.push(
+  houses.push(
     await createHouse(
-      "../Models/old_building__lowpoly.glb",
+      "../Models/tiny_house.glb",
       [0.6, 0.6, 0.6],
-      [30, 0.1, 35],
+      [30, 0.1, 33],
+      { x: 0, y: Math.PI, z: 0 }
+    )
+  );
+  houses.push(
+    await createHouse(
+      "../Models/tiny_house.glb",
+      [0.6, 0.6, 0.6],
+      [35, 0.1, 33],
+      { x: 0, y: Math.PI, z: 0 }
+    )
+  );
+  houses.push(
+    await createHouse(
+      "../Models/tiny_house.glb",
+      [0.6, 0.6, 0.6],
+      [40, 0.1, 33],
+      { x: 0, y: Math.PI, z: 0 }
+    )
+  );
+  houses.push(
+    await createHouse(
+      "../Models/tiny_house.glb",
+      [0.6, 0.6, 0.6],
+      [45, 0.1, 33],
+      { x: 0, y: Math.PI, z: 0 }
+    )
+  );
+  houses.push(
+    await createHouse(
+      "../Models/tiny_house.glb",
+      [0.6, 0.6, 0.6],
+      [50, 0.1, 33],
+      { x: 0, y: Math.PI, z: 0 }
+    )
+  );
+  houses.push(
+    await createHouse(
+      "../Models/tiny_house.glb",
+      [0.6, 0.6, 0.6],
+      [55, 0.1, 33],
+      { x: 0, y: Math.PI, z: 0 }
+    )
+  );
+  houses.push(
+    await createHouse(
+      "../Models/tiny_house.glb",
+      [0.6, 0.6, 0.6],
+      [60, 0.1, 33],
+      { x: 0, y: Math.PI, z: 0 }
+    )
+  );
+  houses.push(
+    await createHouse(
+      "../Models/tiny_house.glb",
+      [0.6, 0.6, 0.6],
+      [65, 0.1, 33],
       { x: 0, y: Math.PI, z: 0 }
     )
   );
 
-  // Warehouse Buildings
-  building.push(
+  //Shanty House
+  houses.push(
     await createHouse(
-      "../Models/warehouse_building.glb",
+      "../Models/shanty.glb",
       [0.2, 0.2, 0.2],
       [-75, 0.1, -15],
       { x: 0, y: Math.PI / 2, z: 0 }
     )
   );
-  building.push(
+  houses.push(
     await createHouse(
-      "../Models/warehouse_building.glb",
+      "../Models/shanty.glb",
       [0.2, 0.2, 0.2],
       [-65, 0.1, -20],
       { x: 0, y: Math.PI / 2, z: 0 }
     )
   );
-  building.push(
+  houses.push(
     await createHouse(
-      "../Models/warehouse_building.glb",
+      "../Models/shanty.glb",
       [0.2, 0.2, 0.2],
       [-55, 0.1, -20],
       { x: 0, y: Math.PI / 2, z: 0 }
     )
   );
-  building.push(
+  houses.push(
     await createHouse(
-      "../Models/warehouse_building.glb",
+      "../Models/shanty.glb",
       [0.2, 0.2, 0.2],
       [-45, 0.1, -20],
       { x: 0, y: Math.PI / 2, z: 0 }
     )
   );
-  building.push(
+  houses.push(
     await createHouse(
-      "../Models/warehouse_building.glb",
+      "../Models/shanty.glb",
       [0.2, 0.2, 0.2],
       [-35, 0.1, -20],
       { x: 0, y: Math.PI / 2, z: 0 }
     )
   );
-  building.push(
+  houses.push(
     await createHouse(
-      "../Models/warehouse_building.glb",
+      "../Models/shanty.glb",
       [0.2, 0.2, 0.2],
       [-25, 0.1, -20],
       { x: 0, y: Math.PI / 2, z: 0 }
     )
   );
-  building.push(
+  houses.push(
     await createHouse(
-      "../Models/warehouse_building.glb",
+      "../Models/shanty.glb",
       [0.2, 0.2, 0.2],
       [-15, 0.1, -20],
       { x: 0, y: Math.PI / 2, z: 0 }
     )
   );
-  building.push(
-    await createHouse(
-      "../Models/warehouse_building.glb",
-      [0.2, 0.2, 0.2],
-      [-5, 0.1, -25],
-      { x: 0, y: Math.PI / 2, z: 0 }
-    )
+  houses.push(
+    await createHouse("../Models/shanty.glb", [0.2, 0.2, 0.2], [-5, 0.1, -25], {
+      x: 0,
+      y: Math.PI / 2,
+      z: 0,
+    })
   );
-  building.push(
-    await createHouse(
-      "../Models/warehouse_building.glb",
-      [0.2, 0.2, 0.2],
-      [5, 0.1, -34],
-      { x: 0, y: Math.PI / 2, z: 0 }
-    )
+  houses.push(
+    await createHouse("../Models/shanty.glb", [0.2, 0.2, 0.2], [5, 0.1, -34], {
+      x: 0,
+      y: Math.PI / 2,
+      z: 0,
+    })
   );
-  building.push(
-    await createHouse(
-      "../Models/warehouse_building.glb",
-      [0.2, 0.2, 0.2],
-      [15, 0.1, -34],
-      { x: 0, y: Math.PI / 2, z: 0 }
-    )
+  houses.push(
+    await createHouse("../Models/shanty.glb", [0.2, 0.2, 0.2], [15, 0.1, -34], {
+      x: 0,
+      y: Math.PI / 2,
+      z: 0,
+    })
   );
-  building.push(
-    await createHouse(
-      "../Models/warehouse_building.glb",
-      [0.2, 0.2, 0.2],
-      [25, 0.1, -34],
-      { x: 0, y: Math.PI / 2, z: 0 }
-    )
+  houses.push(
+    await createHouse("../Models/shanty.glb", [0.2, 0.2, 0.2], [25, 0.1, -34], {
+      x: 0,
+      y: Math.PI / 2,
+      z: 0,
+    })
   );
-  building.push(
-    await createHouse(
-      "../Models/warehouse_building.glb",
-      [0.2, 0.2, 0.2],
-      [35, 0.1, -34],
-      { x: 0, y: Math.PI / 2, z: 0 }
-    )
+  houses.push(
+    await createHouse("../Models/shanty.glb", [0.2, 0.2, 0.2], [35, 0.1, -34], {
+      x: 0,
+      y: Math.PI / 2,
+      z: 0,
+    })
   );
-  building.push(
-    await createHouse(
-      "../Models/warehouse_building.glb",
-      [0.2, 0.2, 0.2],
-      [45, 0.1, -34],
-      { x: 0, y: Math.PI / 2, z: 0 }
-    )
+  houses.push(
+    await createHouse("../Models/shanty.glb", [0.2, 0.2, 0.2], [45, 0.1, -34], {
+      x: 0,
+      y: Math.PI / 2,
+      z: 0,
+    })
   );
-  building.push(
-    await createHouse(
-      "../Models/warehouse_building.glb",
-      [0.2, 0.2, 0.2],
-      [55, 0.1, -34],
-      { x: 0, y: Math.PI / 2, z: 0 }
-    )
+  houses.push(
+    await createHouse("../Models/shanty.glb", [0.2, 0.2, 0.2], [55, 0.1, -34], {
+      x: 0,
+      y: Math.PI / 2,
+      z: 0,
+    })
   );
-  building.push(
+  houses.push(
+    await createHouse("../Models/shanty.glb", [0.2, 0.2, 0.2], [65, 0.1, -34], {
+      x: 0,
+      y: Math.PI / 2,
+      z: 0,
+    })
+  );
+
+  houses.push(
+    await createHouse("../Models/shanty.glb", [0.2, 0.2, 0.2], [-55, 0.1, 0], {
+      x: 0,
+      y: -Math.PI / 2,
+      z: 0,
+    })
+  );
+  houses.push(
+    await createHouse("../Models/shanty.glb", [0.2, 0.2, 0.2], [-45, 0.1, 0], {
+      x: 0,
+      y: -Math.PI / 2,
+      z: 0,
+    })
+  );
+  houses.push(
+    await createHouse("../Models/shanty.glb", [0.2, 0.2, 0.2], [-35, 0.1, 0], {
+      x: 0,
+      y: -Math.PI / 2,
+      z: 0,
+    })
+  );
+  houses.push(
+    await createHouse("../Models/shanty.glb", [0.2, 0.2, 0.2], [-25, 0.1, 0], {
+      x: 0,
+      y: -Math.PI / 2,
+      z: 0,
+    })
+  );
+  houses.push(
+    await createHouse("../Models/shanty.glb", [0.2, 0.2, 0.2], [-15, 0.1, 0], {
+      x: 0,
+      y: -Math.PI / 2,
+      z: 0,
+    })
+  );
+  houses.push(
+    await createHouse("../Models/shanty.glb", [0.2, 0.2, 0.2], [-5, 0.1, 0], {
+      x: 0,
+      y: -Math.PI / 2,
+      z: 0,
+    })
+  );
+  houses.push(
+    await createHouse("../Models/shanty.glb", [0.2, 0.2, 0.2], [5, 0.1, -10], {
+      x: 0,
+      y: -Math.PI / 2,
+      z: 0,
+    })
+  );
+  houses.push(
+    await createHouse("../Models/shanty.glb", [0.2, 0.2, 0.2], [15, 0.1, -15], {
+      x: 0,
+      y: -Math.PI / 2,
+      z: 0,
+    })
+  );
+  houses.push(
+    await createHouse("../Models/shanty.glb", [0.2, 0.2, 0.2], [25, 0.1, -15], {
+      x: 0,
+      y: -Math.PI / 2,
+      z: 0,
+    })
+  );
+
+  // Bar
+
+  houses.push(
     await createHouse(
-      "../Models/warehouse_building.glb",
-      [0.2, 0.2, 0.2],
-      [65, 0.1, -34],
-      { x: 0, y: Math.PI / 2, z: 0 }
+      "../Models/bar_shack.glb",
+      [0.015, 0.015, 0.015],
+      [10, 0.1, 11]
     )
   );
 
-  building.push(
-    await createHouse(
-      "../Models/warehouse_building.glb",
-      [0.2, 0.2, 0.2],
-      [-55, 0.1, 0],
-      { x: 0, y: -Math.PI / 2, z: 0 }
-    )
+  //Everything
+  // houses.push(await createHouse('../Models/tree.glb', [0.5, 0.5, 0.5], [-90, 0.1, 15], {x: 0, y: Math.PI / 2, z: 0}));
+  // houses.push(await createHouse('../Models/tree.glb', [0.5, 0.5, 0.5], [-90, 0.1, -5], {x: 0, y: Math.PI / 2, z: 0}));
+  // houses.push(await createHouse('../Models/tree.glb', [0.5, 0.5, 0.5], [-90, 0.1, 45], {x: 0, y: Math.PI / 2, z: 0}));
+
+  houses.push(
+    await createHouse("../Models/grass.glb", [2, 2, 2], [15, 0.1, 10])
   );
-  building.push(
-    await createHouse(
-      "../Models/warehouse_building.glb",
-      [0.2, 0.2, 0.2],
-      [-45, 0.1, 0],
-      { x: 0, y: -Math.PI / 2, z: 0 }
-    )
+  houses.push(
+    await createHouse("../Models/grass.glb", [2, 2, 2], [15, 0.1, 20])
   );
-  building.push(
-    await createHouse(
-      "../Models/warehouse_building.glb",
-      [0.2, 0.2, 0.2],
-      [-35, 0.1, 0],
-      { x: 0, y: -Math.PI / 2, z: 0 }
-    )
-  );
-  building.push(
-    await createHouse(
-      "../Models/warehouse_building.glb",
-      [0.2, 0.2, 0.2],
-      [-25, 0.1, 0],
-      { x: 0, y: -Math.PI / 2, z: 0 }
-    )
-  );
-  building.push(
-    await createHouse(
-      "../Models/warehouse_building.glb",
-      [0.2, 0.2, 0.2],
-      [-15, 0.1, 0],
-      { x: 0, y: -Math.PI / 2, z: 0 }
-    )
-  );
-  building.push(
-    await createHouse(
-      "../Models/warehouse_building.glb",
-      [0.2, 0.2, 0.2],
-      [-5, 0.1, 0],
-      { x: 0, y: -Math.PI / 2, z: 0 }
-    )
-  );
-  building.push(
-    await createHouse(
-      "../Models/warehouse_building.glb",
-      [0.2, 0.2, 0.2],
-      [5, 0.1, -10],
-      { x: 0, y: -Math.PI / 2, z: 0 }
-    )
-  );
-  building.push(
-    await createHouse(
-      "../Models/warehouse_building.glb",
-      [0.2, 0.2, 0.2],
-      [15, 0.1, -15],
-      { x: 0, y: -Math.PI / 2, z: 0 }
-    )
-  );
-  building.push(
-    await createHouse(
-      "../Models/warehouse_building.glb",
-      [0.2, 0.2, 0.2],
-      [25, 0.1, -15],
-      { x: 0, y: -Math.PI / 2, z: 0 }
-    )
+  houses.push(
+    await createHouse("../Models/grass.glb", [2, 2, 2], [15, 0.1, 30])
   );
 
-  // Additional Warehouse Buildings - this should be some adverse object
-  // building.push(await createHouse('../Models/tree.glb', [0.2, 0.2, 0.2], [35, 0.1, -20], {x: 0, y: -Math.PI / 2, z: 0 }));
-  // building.push(await createHouse('../Models/tree.glb', [0.2, 0.2, 0.2], [45, 0.1, -25], {x: 0, y: -Math.PI / 2, z: 0 }));
-  // building.push(await createHouse('../Models/crates_set.glb', [0.2, 0.2, 0.2], [55, 0.1, -30], {x: 0, y: -Math.PI / 2, z: 0 }));
-
-  building.push(
+  houses.push(
     await createHouse(
-      "../Models/warehouse_building.glb",
-      [0.5, 0.5, 0.5],
-      [-90, 0.1, 15],
-      { x: 0, y: Math.PI / 2, z: 0 }
-    )
-  );
-  building.push(
-    await createHouse(
-      "../Models/old_building__lowpoly.glb",
-      [0.5, 0.5, 0.5],
-      [-90, 0.1, -5],
-      { x: 0, y: Math.PI / 2, z: 0 }
-    )
-  );
-  building.push(
-    await createHouse(
-      "../Models/warehouse_building.glb",
-      [0.5, 0.5, 0.5],
-      [-90, 0.1, 45],
-      { x: 0, y: Math.PI / 2, z: 0 }
-    )
-  );
-
-  building.push(
-    await createHouse(
-      "../Models/suspicious_business_office.glb",
+      "../Models/soccer_field.glb",
       [0.5, 0.5, 0.5],
       [50, 0.1, -10],
       { x: 0, y: Math.PI / 2, z: 0 }
     )
   );
-  building.push(
+  houses.push(
     await createHouse(
       "../Models/playground.glb",
       [1.5, 1.5, 1.5],
@@ -887,18 +872,11 @@ const create3DEnvironment = async () => {
 
   const track = model.children[0].children[7];
   const textureLoader = new THREE.TextureLoader();
-  const trackTexture = textureLoader.load("../Textures/ice.png");
-  const trackMaterial = new THREE.MeshStandardMaterial({
-    map: trackTexture,
-    color: 0xffffff, // Ensures the texture stays white
-    roughness: 0.8,
-    metalness: 0.2,
-  });
+  const trackTexture = textureLoader.load("../Models/road.jpg");
+  const trackMaterial = new THREE.MeshStandardMaterial({ map: trackTexture });
   track.scale.set(2, 2, 2);
-  track.material[1].emissive = 0xb0b0b0;
-  track.material[3] = trackMaterial;
   track.material[4] = trackMaterial;
-  track.material[5].emissive = 0xb0b0b0;
+  track.material[5].emissive = 0xffffff;
   const t = model.children[0].children[7];
   boundaries(t.geometry.attributes.position.array);
   const finish = finishPlane();
@@ -908,29 +886,16 @@ const create3DEnvironment = async () => {
   scene.add(plane);
   scene.add(track);
   scene.add(car);
-  // Add all building to the scene
-  building.forEach((house) => scene.add(house));
+  // Add all houses to the scene
+  houses.forEach((house) => scene.add(house));
 
   // L I G H T I N G
-  const ambientLight = new THREE.AmbientLight(0x555577, 0.2);
+  const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
   scene.add(ambientLight);
 
-  const directionalLight = new THREE.DirectionalLight(0xcccccc, 0.4);
-  directionalLight.position.set(50, 50, 50);
+  const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+  directionalLight.position.set(10, 10, 10);
   scene.add(directionalLight);
-
-  const moonLight = new THREE.DirectionalLight(0xaaaaee, 0.3);
-  moonLight.position.set(-30, 50, -30);
-  moonLight.castShadow = true;
-  scene.add(moonLight);
-
-  const spotlight = new THREE.SpotLight(0x8888ff, 0.1); // Very dim spotlight for ambient effect
-  spotlight.position.set(10, 10, 10); // Adjust position as needed
-  spotlight.angle = Math.PI / 6;
-  spotlight.penumbra = 0.5;
-  spotlight.decay = 2;
-  spotlight.distance = 50;
-  scene.add(spotlight);
 
   //const cannonDebugger = new CannonDebugger(scene, physicsWorld);
   const time = new Time(100, vehicle);
@@ -1000,8 +965,6 @@ const create3DEnvironment = async () => {
     if (boundingBox.intersectsBox(finishBox)) {
       time.state = "stopped";
     }
-
-    animateSnow(); // Adds the continuous rain effect
 
     // Smooth camera follow the car
     smoothCameraFollow(camera, car);
