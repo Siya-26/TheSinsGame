@@ -322,9 +322,10 @@ const finishPlane = (x, y, z) => {
   const material = new THREE.MeshStandardMaterial({
     map: gravelTexture,
     color: 0xffffff,
-    roughness: 0.3,
-    metalness: 0.6,
+    roughness: 0.5,
+    metalness: 0.2,
   });
+
   const plane = new THREE.Mesh(geometry, material);
   plane.position.set(x, y, z);
   plane.rotation.y = -Math.PI / 2;
@@ -353,9 +354,10 @@ const loadCarModel = async (scene) => {
         const car = gltf.scene;
         car.scale.set(0.003, 0.003, 0.003); // Scale car
         car.position.set(1000, 1000, 1000); // Position car
-        car.position.y += 0.05; // Slightly raises car above the track to avoid z-fighting
+        car.position.y += 0.02; // Slightly raises car above the track to avoid z-fighting
         car.rotateX(-90); // Rotate car
         car.traverse((child) => {
+          child.castShadow = true;
           if (child.isMesh) {
             child.material = new THREE.MeshStandardMaterial({
               color: 0xb22222,
@@ -841,26 +843,32 @@ const create3DEnvironment = async () => {
   const textureLoader = new THREE.TextureLoader();
   const trackTexture = textureLoader.load("../Textures/gravel.png");
   const trackMaterial = new THREE.MeshStandardMaterial({
-    map: trackTexture,
-    color: 0xffffff, // Ensures the texture stays white
-    roughness: 0.8,
-    metalness: 0.2,
+      map: trackTexture,
+      color: 0xffffff,
+      roughness: 0.3,
+      metalness: 0.5,
   });
+  
   track.scale.set(2, 2, 2);
+  track.receiveShadow = true; // Enable shadow receiving
+  
   track.material[1].emissive = 0xb0b0b0;
   track.material[3] = trackMaterial;
   track.material[4] = trackMaterial;
   track.material[5].emissive = 0xb0b0b0;
+  
   const t = model.children[0].children[7];
   boundaries(t.geometry.attributes.position.array);
   const finish = finishPlane(45, 0.1, 27.25);
+  
 
-  scene.add(finish);
-  scene.add(plane);
-  scene.add(track);
+  // scene.add(finish);
+  // scene.add(plane);
+  // track.receiveShadow = true;
+  // scene.add(track);
+  // car.castShadow = true;
+  // scene.add(car);
 
-  car.castShadow = true; // This object will cast shadows
-  scene.add(car);
   // Add all building to the scene
   building.forEach((house) => {
     house.castShadow = true;
@@ -869,36 +877,40 @@ const create3DEnvironment = async () => {
   });
 
   // L I G H T I N G
-  const ambientLight = new THREE.AmbientLight(0x555577, 0.2);
+  const ambientLight = new THREE.AmbientLight(0x555577, 0.6);
   scene.add(ambientLight);
 
-  const directionalLight = new THREE.DirectionalLight(0xcccccc, 0.8);
-  directionalLight.position.set(80, 80, 80);
+  const directionalLight = new THREE.DirectionalLight(0xffa500, 0.5);
+  directionalLight.position.set(-80, 80, -80);
   directionalLight.castShadow = true;
+  directionalLight.shadow.mapSize.width = 1024;
+  directionalLight.shadow.mapSize.height = 1024;
+  directionalLight.shadow.camera.near = 0.6;
+  directionalLight.shadow.camera.far = 60;
+  directionalLight.shadow.bias = -0.02;
   scene.add(directionalLight);
 
-  const sunLight = new THREE.DirectionalLight(0xffa500, 0.8);
+  const sunLight = new THREE.DirectionalLight(0xffa500, 0.5);
   sunLight.position.set(-80, 80, -80);
   sunLight.castShadow = true;
+  sunLight.shadow.mapSize.width = 1024;
+  sunLight.shadow.mapSize.height = 1024;
+  sunLight.shadow.camera.near = 0.6;
+  sunLight.shadow.camera.far = 60;
+  sunLight.shadow.bias = -0.02;
   scene.add(sunLight);
 
   const spotlight = new THREE.SpotLight(0x8888ff, 0.5);
-  spotlight.position.set(80, 80, 80);
+  spotlight.position.set(-80, 80, -80);
   spotlight.castShadow = true;
   scene.add(spotlight);
 
-  // S H A D O W S
-  sunLight.shadow.mapSize.width = 1024;
-  sunLight.shadow.mapSize.height = 1024;
-  sunLight.shadow.camera.near = 0.1;
-  sunLight.shadow.camera.far = 500;
-  sunLight.shadow.bias = -0.0001;
-
   // Add the plane, track, car to the scene
+  scene.add(finish);
   scene.add(plane);
+  track.receiveShadow = true;
   scene.add(track);
   car.castShadow = true;
-  car.receiveShadow = true; // Optionally allow the car to receive shadows
   scene.add(car);
 
   const cannonDebugger = new CannonDebugger(scene, physicsWorld);
