@@ -973,7 +973,7 @@ const create3DEnvironment = async () => {
     // animateSnow(); // Adds the continuous rain effect
 
     // Smooth camera follow the car
-    //smoothCameraFollow(camera, car);
+    smoothCameraFollow(camera, car);
 
     // Render the scene
     renderer.render(scene, camera);
