@@ -269,6 +269,10 @@ import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader.js';
 const loader = new FBXLoader();
 const loader1 = new GLTFLoader();
 
+const audioLoader = new THREE.AudioLoader();
+const listener = new THREE.AudioListener();
+let engineSound, collisionSound, finishSound;
+
 // Add grass plane function
 const buildGrassPlane = () => {
     const grassWidth = 512; // Larger than the road
@@ -287,7 +291,7 @@ const buildGrassPlane = () => {
     });
     const plane = new THREE.Mesh(geometry, material);
     plane.rotation.x = -Math.PI / 2;
-    plane.position.y = 0.005; // Adjusted position to be at the same height as the road
+    plane.position.y = 0.005; 
     return plane;
 };
 
@@ -396,7 +400,7 @@ const loadHouses = async (houses) => {
     ];
 
     peoplePositions.forEach(async (position) => {
-        houses.push(await createHouse('../../Models/level2/level2-models/person.glb', [0.6, 0.6, 0.6], position));
+        houses.push(await createHouse('../../Models/level2/level2-models/old_tree.glb', [0.6, 0.6, 0.6], position));
     });
 
     // Restore trees
@@ -409,8 +413,8 @@ const loadHouses = async (houses) => {
     });
 
     // Additional decorative elements
-    houses.push(await createHouse('../../Models/level2/level2-models/dustbindrink_cans.glb', [0.015, 0.015, 0.015], [10, 0.1, 11]));
-    houses.push(await createHouse('../../Models/level2/level2-models/tree_of_life.glb', [0.5, 0.5, 0.5], [50, 0.1, -10], {x: 0, y: Math.PI / 2, z: 0}));
+    houses.push(await createHouse('../../Models/level2/level2-models/boy.glb', [0.015, 0.015, 0.015], [10, 0.1, 11]));
+    houses.push(await createHouse('../../Models/level2/level2-models/tree_gn.glb', [0.5, 0.5, 0.5], [50, 0.1, -10], {x: 0, y: Math.PI / 2, z: 0}));
     houses.push(await createHouse('../../Models/level2/level2-models/playground.glb', [1.5, 1.5, 1.5], [85, 0.1, -30], {x: 0, y: Math.PI / 2, z: 0}));
 };
 const loadTrackModel = () => {
@@ -424,6 +428,34 @@ const loadTrackModel = () => {
             (xhr) => console.log(`${(xhr.loaded / xhr.total * 100)}% loaded`),
             (error) => reject(error)
         );
+    });
+};
+
+const loadSounds = () => {
+    return new Promise((resolve, reject) => {
+        engineSound = new THREE.Audio(listener);
+        collisionSound = new THREE.Audio(listener);
+        finishSound = new THREE.Audio(listener);
+
+        // Load engine sound
+        audioLoader.load('../../sounds/engine_start.mp3', (buffer) => {
+            engineSound.setBuffer(buffer);
+            engineSound.setLoop(false);
+            engineSound.setVolume(0.5);
+        });
+
+        // Load collision sound
+        audioLoader.load('../../sounds/collision.mp3', (buffer) => {
+            collisionSound.setBuffer(buffer);
+            collisionSound.setVolume(0.7);
+        });
+
+        // Load finish sound
+        audioLoader.load('../../sounds/finish.mp3', (buffer) => {
+            finishSound.setBuffer(buffer);
+            finishSound.setVolume(1.0);
+            resolve();
+        });
     });
 };
 
@@ -504,10 +536,10 @@ const create3DEnvironment = async () => {
     const vehicle = physicsCar.vehicle;
     const game = new Game(200, vehicle);
     const { plane, car, track, houses, finish, grass } = await loadModels(scene, physicsWorld);
+    camera.camera.add(listener);
 
 
-    let collisionCount = 0;
-    const maxCollisions = 3;
+    
 
     physicsCar.createVehicle();
     vehicle.addToWorld(physicsWorld.physicsWorld);
@@ -525,51 +557,77 @@ const create3DEnvironment = async () => {
     addSkybox(scene);
     houses.forEach(house => scene.add(house));
 
-    game.startTime();
 
+    await loadSounds();
+    game.startTime();
+    engineSound.play();
+
+    // Initial obstacle hit counter
+    let collisionCount = 0;
+    const maxCollisions = 1;
+    const obstacleCounterElement = document.getElementById('obstacleCounter');
+
+
+
+// Animation function with obstacle collision check
     const animate = () => {
-        
-        const boundingBox = new THREE.Box3().setFromObject(car).expandByScalar(-0.1); 
+        const boundingBox = new THREE.Box3().setFromObject(car);
         const finishBox = new THREE.Box3().setFromObject(finish);
-        const collisionCooldown = 100; 
-        let lastCollisionTime = 0; 
-    
+        const collisionCooldown = 100; // Time in milliseconds before allowing another collision count
+        let lastCollisionTime = 0; // Track the last collision time
+
+        // Check for obstacle collisions
         houses.forEach(house => {
             if (house.userData.isObstacle) {
-               
-                const obstacleBox = new THREE.Box3().setFromObject(house).expandByScalar(-0.1);
-    
-            
+                const obstacleBox = new THREE.Box3().setFromObject(house);
+
+                // Check if the bounding box of the vehicle intersects with the obstacle box
                 if (boundingBox.intersectsBox(obstacleBox)) {
                     const currentTime = Date.now();
-    
+
+                    // Only count the collision if enough time has passed
                     if (currentTime - lastCollisionTime > collisionCooldown) {
                         collisionCount++;
-                        lastCollisionTime = currentTime; 
-                        console.log(`Collision ${collisionCount}/${maxCollisions}`);
-    
-                        if (collisionCount > maxCollisions) {
+                        lastCollisionTime = currentTime; // Update the last collision time
+
+                        if (collisionSound.isPlaying) {
+                            collisionSound.stop();
+                        }
+                        collisionSound.play();
+
+                        // Update the obstacle counter display
+                        obstacleCounterElement.textContent = `Obstacles hit: ${collisionCount}/${maxCollisions}`;
+
+                        // End game if collisionCount reaches maxCollisions
+                        if (collisionCount >= maxCollisions) {
+                            engineSound.stop();
                             game.state = "dead";
                             window.location.href = 'hitObs.html';
-                            console.log("Game Over - Too many collisions!");
-                            return;
+                            console.log("Game Over - Obstacle hit!");
+                            return; // Exit the function to handle game over
                         }
                     }
                 }
             }
         });
-    
-        // Check if the car intersects with the finish box
+
+        // Remaining animation and rendering logic
+        if (game.state === "dead") return; // Stop animation if game is over
+
+        // Check if the car intersects with the finish line
         if (boundingBox.intersectsBox(finishBox)) {
+            engineSound.stop();
+            finishSound.play();
             game.state = "stopped";
             console.log("Finished the race!");
         }
-    
-        if (game.state === "dead") {
-            console.log("Game Over!");
-            return;
+
+        if (engineSound) {
+            const speed = vehicle.chassisBody.velocity.length();
+            engineSound.playbackRate = 0.5 + (speed * 0.1);
         }
-    
+
+        // Continue the animation loop
         window.requestAnimationFrame(animate);
         physicsWorld.physicsWorld.fixedStep();
         game.checkState();
@@ -579,6 +637,7 @@ const create3DEnvironment = async () => {
         camera.smoothCameraFollow(car);
         renderer.renderer.render(scene, camera.camera);
     };
+
     
     
     // Start the animation loop

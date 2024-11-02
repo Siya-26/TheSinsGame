@@ -57,7 +57,7 @@ function startGame() {
     if (trackSelected && carSelected && modeSelected) {
         
         // Redirect to the game (race.html for now)
-        window.location.href = 'level2.html'; // Replace with your game page
+        window.location.href = 'level4.html'; // Replace with your game page
     }
 }
 
