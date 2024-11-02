@@ -220,6 +220,31 @@ const { vehicle, wheelBody1, wheelBody2, wheelBody3, wheelBody4 } =
   physicsCar();
 vehicle.addToWorld(physicsWorld);
 
+const createCannonPlane = (x, y, z) => {
+  const roadWidth = 0.25;
+  const roadLength = 2;
+  const roadThickness = 0.05;
+
+  const planeShape = new CANNON.Box(
+    new CANNON.Vec3(roadWidth, roadThickness, roadLength)
+  );
+
+  const planeBody = new CANNON.Body({
+    mass: 0,
+  });
+  planeBody.addShape(planeShape);
+
+  planeBody.position.set(x, y, z);
+
+  planeBody.quaternion.setFromAxisAngle(new CANNON.Vec3(1, 0, 0), -Math.PI / 2);
+  planeBody.quaternion.setFromAxisAngle(new CANNON.Vec3(0, 0, 1), -Math.PI / 2);
+
+  return planeBody;
+};
+
+const startBody = createCannonPlane(41.5, 0.2, 26.75);
+physicsWorld.addBody(startBody);
+
 const boundaries = (positions) => {
   const mass = 1000;
   const body = new CANNON.Body({ mass });
@@ -284,7 +309,7 @@ const buildPlane = () => {
   return plane;
 };
 
-const finishPlane = () => {
+const finishPlane = (x, y, z) => {
   const roadWidth = 8;
   const roadLength = 2;
   const geometry = new THREE.PlaneGeometry(roadWidth, roadLength);
@@ -301,7 +326,7 @@ const finishPlane = () => {
     metalness: 0.6,
   });
   const plane = new THREE.Mesh(geometry, material);
-  plane.position.set(45, 0.1, 27.25);
+  plane.position.set(x, y, z);
   plane.rotation.y = -Math.PI / 2;
   return plane;
 };
@@ -333,7 +358,7 @@ const loadCarModel = async (scene) => {
         car.traverse((child) => {
           if (child.isMesh) {
             child.material = new THREE.MeshStandardMaterial({
-              color: 0xB22222,
+              color: 0xb22222,
             });
           }
         });
@@ -429,41 +454,37 @@ const createHouse = async (
 
 // CREATE ENVIRONMENT
 const create3DEnvironment = async () => {
-    const renderer = new THREE.WebGLRenderer({ antialias: true });
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.shadowMap.enabled = true; // Enable shadow mapping
-    renderer.shadowMap.type = THREE.PCFSoftShadowMap; // Set shadow map type
-    document.body.appendChild(renderer.domElement);
-  
-    const camera = new THREE.PerspectiveCamera(
-      thirdPersonView.fieldOfView,
-      thirdPersonView.aspect,
-      thirdPersonView.nearPlane,
-      thirdPersonView.farPlane
-    );
-    camera.position.set(0, 10, 0);
-  
-    const controls = new OrbitControls(camera, renderer.domElement);
-    controls.enableZoom = true; 
-    controls.minDistance = 5; 
-    controls.maxDistance = 100; 
-    const scene = new THREE.Scene();
-  
-    loadSkybox(scene);
-  
-    const plane = buildPlane();
-    const model = await loadTrack();
-    const car = await loadCarModel(scene);
-  
-    const building = [];
+  const renderer = new THREE.WebGLRenderer({ antialias: true });
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.shadowMap.enabled = true; // Enable shadow mapping
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap; // Set shadow map type
+  document.body.appendChild(renderer.domElement);
+
+  const camera = new THREE.PerspectiveCamera(
+    thirdPersonView.fieldOfView,
+    thirdPersonView.aspect,
+    thirdPersonView.nearPlane,
+    thirdPersonView.farPlane
+  );
+  camera.position.set(0, 10, 0);
+
+  const controls = new OrbitControls(camera, renderer.domElement);
+  controls.enableZoom = true;
+  controls.minDistance = 5;
+  controls.maxDistance = 100;
+  const scene = new THREE.Scene();
+
+  loadSkybox(scene);
+
+  const plane = buildPlane();
+  const model = await loadTrack();
+  const car = await loadCarModel(scene);
+
+  const building = [];
 
   // Old Buildings
   building.push(
-    await createHouse(
-      "../Models/tiny_house.glb",
-      [0.6, 0.6, 0.6],
-      [20, 0.1, 8]
-    )
+    await createHouse("../Models/tiny_house.glb", [0.6, 0.6, 0.6], [20, 0.1, 8])
   );
   building.push(
     await createHouse(
@@ -832,19 +853,18 @@ const create3DEnvironment = async () => {
   track.material[5].emissive = 0xb0b0b0;
   const t = model.children[0].children[7];
   boundaries(t.geometry.attributes.position.array);
-  const finish = finishPlane();
-  scene.add(finish);
+  const finish = finishPlane(45, 0.1, 27.25);
 
-  // Add the plane, track, car to the scene
+  scene.add(finish);
   scene.add(plane);
   scene.add(track);
 
-  car.castShadow = true;  // This object will cast shadows
+  car.castShadow = true; // This object will cast shadows
   scene.add(car);
   // Add all building to the scene
   building.forEach((house) => {
-    house.castShadow = true; 
-    house.receiveShadow = true; 
+    house.castShadow = true;
+    house.receiveShadow = true;
     scene.add(house);
   });
 
@@ -857,32 +877,32 @@ const create3DEnvironment = async () => {
   directionalLight.castShadow = true;
   scene.add(directionalLight);
 
-  const sunLight = new THREE.DirectionalLight(0xFFA500, 0.8);
+  const sunLight = new THREE.DirectionalLight(0xffa500, 0.8);
   sunLight.position.set(-80, 80, -80);
   sunLight.castShadow = true;
   scene.add(sunLight);
 
-  const spotlight = new THREE.SpotLight(0x8888ff, 0.5); 
-  spotlight.position.set(80, 80, 80); 
-  spotlight.castShadow = true; 
+  const spotlight = new THREE.SpotLight(0x8888ff, 0.5);
+  spotlight.position.set(80, 80, 80);
+  spotlight.castShadow = true;
   scene.add(spotlight);
 
-  // S H A D O W S 
-  sunLight.shadow.mapSize.width = 1024; 
-  sunLight.shadow.mapSize.height = 1024; 
-  sunLight.shadow.camera.near = 0.1; 
-  sunLight.shadow.camera.far = 500; 
-  sunLight.shadow.bias = -0.0001; 
+  // S H A D O W S
+  sunLight.shadow.mapSize.width = 1024;
+  sunLight.shadow.mapSize.height = 1024;
+  sunLight.shadow.camera.near = 0.1;
+  sunLight.shadow.camera.far = 500;
+  sunLight.shadow.bias = -0.0001;
 
   // Add the plane, track, car to the scene
   scene.add(plane);
   scene.add(track);
-  car.castShadow = true; 
+  car.castShadow = true;
   car.receiveShadow = true; // Optionally allow the car to receive shadows
   scene.add(car);
 
-  //const cannonDebugger = new CannonDebugger(scene, physicsWorld);
-  const time = new Time(70, vehicle);
+  const cannonDebugger = new CannonDebugger(scene, physicsWorld);
+  const time = new Time(100, vehicle);
   time.startTime();
 
   const waypoints = [
@@ -919,7 +939,7 @@ const create3DEnvironment = async () => {
   const animate = () => {
     window.requestAnimationFrame(animate);
     physicsWorld.fixedStep();
-    //cannonDebugger.update();
+    cannonDebugger.update();
     car.position.copy(vehicle.chassisBody.position);
     car.quaternion.copy(vehicle.chassisBody.quaternion);
     controls.update();
@@ -953,7 +973,7 @@ const create3DEnvironment = async () => {
     // animateSnow(); // Adds the continuous rain effect
 
     // Smooth camera follow the car
-    smoothCameraFollow(camera, car);
+    //smoothCameraFollow(camera, car);
 
     // Render the scene
     renderer.render(scene, camera);
