@@ -856,8 +856,8 @@ const create3DEnvironment = async () => {
   const trackMaterial = new THREE.MeshStandardMaterial({
     map: trackTexture,
     color: 0xffffff,
-    roughness: 0.8,
-    metalness: 0.2,
+    roughness: 0.4,
+    metalness: 0.5,
   });
   track.scale.set(2, 2, 2);
   flag.scale.set(0.3, 0.3, 0.3);
@@ -890,12 +890,12 @@ const create3DEnvironment = async () => {
   const ambientLight = new THREE.AmbientLight(0x555577, 0.2);
   scene.add(ambientLight);
 
-  const directionalLight = new THREE.DirectionalLight(0xcccccc, 0.8);
+  const directionalLight = new THREE.DirectionalLight(0xffa500, 0.6);
   directionalLight.position.set(80, 80, 80);
   directionalLight.castShadow = true;
   scene.add(directionalLight);
 
-  const sunLight = new THREE.DirectionalLight(0xffa500, 0.8);
+  const sunLight = new THREE.DirectionalLight(0xffa500, 0.6);
   sunLight.position.set(-80, 80, -80);
   sunLight.castShadow = true;
   scene.add(sunLight);
