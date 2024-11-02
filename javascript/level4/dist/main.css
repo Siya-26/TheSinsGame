@@ -1,0 +1,154 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box; /* Ensure padding and border are included in element's total width and height */
+}
+
+body {
+    background-color: #f0f4ff; /* Light background color for contrast */
+    font-family: Arial, sans-serif; /* Clean font for better readability */
+}
+
+.box1, .box2, .box3, .box4, .box5, .box6, .box7 {
+    background-color: #e0f7fa; /* Soft cyan background */
+    color: #00796b; /* Dark teal text */
+    border-radius: 15px; /* Rounded corners */
+    padding: 20px; /* Space inside the boxes */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Subtle shadow for depth */
+    position: absolute;
+    z-index: 400;
+    display: flex; /* Use flexbox for alignment */
+    align-items: center;
+    justify-content: center; /* Center content horizontally */
+    text-align: center; /* Center text */
+}
+
+.box7:hover{
+    background-color: #00796b; 
+    color: #e0f7fa; 
+   
+}
+
+.box1:hover{
+    background-color: #00796b; 
+    color: #e0f7fa; 
+   
+}
+.box2:hover{
+    background-color: #00796b; 
+    color: #e0f7fa; 
+   
+}
+.box3:hover{
+    background-color: #00796b; 
+    color: #e0f7fa; 
+   
+}
+.box4:hover{
+    background-color: #00796b; 
+    color: #e0f7fa; 
+   
+}
+
+/* .box5:hover{
+    background-color: #00796b; 
+    color: #e0f7fa; 
+   
+} */
+
+.box6:hover{
+    background-color: #00796b; 
+    color: #e0f7fa; 
+   
+}
+
+.box1 {
+    top: 2%;
+}
+
+.box2 {
+    top: 2%;
+    left: 163px;
+}
+
+.box3 {
+    top: 2%;
+    left: 320px;
+}
+
+.box4 {
+    top: 2%;
+    left: 460px;
+}
+
+.box5 {
+    position: absolute; 
+    top: 200px;        
+    left: 500px;       
+    font-size: large;  
+    flex-direction: column;
+    background-color: #e0f7fa; 
+    color: #00796b; 
+    border-radius: 15px; 
+    padding: 20px; 
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); 
+    display: flex; 
+    align-items: center;
+    justify-content: center; 
+    text-align: center; 
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+ .box55{
+    position: absolute; 
+    top: 200px;        
+    left: 420px;       
+    font-size: large;  
+    font-weight: bold; 
+    background-color: #e0f7fa; 
+    color: #00796b; 
+    border-radius: 15px; 
+    padding: 20px; 
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); 
+    display: flex; 
+    flex-direction: column;
+    align-items: center;
+    justify-content: center; 
+    text-align: center; 
+    justify-content: space-between;
+    gap: 1rem;
+ }
+
+
+.box6 {
+    top: 2%;
+    left: 620px;
+}
+
+.box7 {
+    top: 2%;
+    left: 820px;
+}
+
+.button-container {
+    display: flex;
+    justify-content: center;
+    gap: 1em;
+}
+
+button {
+    padding: 15px 30px;
+    font-size: 1.2em;
+    background-color: #333;
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+button:hover {
+    background-color: #ffcc00;
+    color: #000;
+}

@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <!-- <meta name="viewport" content="width=device-width, initial-scale=1.0"> -->
+    <title>Sins</title>
+    <style>
+        body { margin: 0; }
+        canvas { display: block; }
+    </style>
+    <link rel="stylesheet" href="../javascript/level4/dist/main.css">
+</head>
+<body>
+    <script src="../javascript/level4/dist/main.js"></script>
+	<div id="score" class="box1">
+		<h5>Score : 0</h5>
+	</div>
+
+	<div id="time" class="box2">
+		<h5>Time : 0</h5>
+	</div>
+
+	<div id="health" class="box3">
+		<h5>Health : 100</h5>
+	</div>
+
+	<div id="fuel" class="box4">
+		<h5>Fuel : 60</h5>
+	</div>
+	<div id="Keys" style="align-items: center;" class="box55">
+		<h4>
+			Keys to control The CAR!!
+		</h4>
+
+		<ul>
+			<h6>
+				<li>Arrow UP : MOVE FORWARD</li>
+			</h6>
+			<h6>
+				<li>Arrow Down : MOVE BACKWARD</li>
+			</h6>
+			<h6>
+				<li>Arrow Left: TURN LEFT</li>
+			</h6>
+			<h6>
+				<li>Arrow Right : TURN RIGHT</li>
+			</h6>
+			<h6>
+				<li>AVOID THE BROWN AND GREEN AREAS, YOU WILL LOSE HEALTH CONTINUOSLY</li>
+				<li>PRESS Arrow Up TO START RACING!</li>
+				<li>PRESS C To Switch Camera Modes</li>
+				<li>PRESS W To Remove Window.</li>
+			</h6>
+
+		</ul>
+
+		<button id="button"> Start </button>
+	</div>
+	<div id="mileage" class="box6">
+		<h5>Mileage : 60</h5>
+	</div>
+	<div id="closest" class="box7">
+		<h5>Next-can : 60</h5>
+	</div>
+
+	<div id="gameover" class="box5" style="display: none;">
+        <h1>Game Over!</h1>
+        <p>PLAYER HEALTH IS 0</p>
+        <div class="button-container">
+            <button onclick="window.location.href='level4.html'">Try Again</button>
+            <button onclick="window.location.href='mainMenu.html'">Cancel</button>
+        </div>
+    </div>
+
+    <div id="gameoverFuel" class="box5" style="display: none;">
+        <h1>Game Over!</h1>
+        <p>Out Of Fuel </p>
+        <div class="button-container">
+            <button onclick="window.location.href='level4.html'">Try Again</button>
+            <button onclick="window.location.href='mainMenu.html'">Cancel</button>
+        </div>
+    </div>
+        
+    </div>
+    
+        
+    </div>
+    
+
+	
+</body>
+</html>
