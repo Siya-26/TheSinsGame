@@ -4,6 +4,9 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader.js';
 import * as CANNON from 'cannon-es';
 import CannonDebugger from 'cannon-es-debugger';
+import { texture } from 'three/webgpu';
+import { Reflector } from 'three/examples/jsm/objects/Reflector.js';
+
 
 class Time {
     constructor(time) {
@@ -26,8 +29,6 @@ class Time {
             window.location.href = '../html/winScreen1.html';
         }
     }
-    
-
     // Method to start the main timer after the countdown finishes
     runTime() {
         this.state = "running"; // Update state to running
@@ -243,11 +244,11 @@ const boundaries = (positions) => {
 const createObstacles = (scene, physicsWorld) => {
   const obstacles = [];
   //const obstacleMaterial = new THREE.MeshStandardMaterial({ color: 0xff0000 }); // Red color for obstacles
-  const texture = new THREE.TextureLoader().load("../images/obstacle.png");
-  const obstacleMaterial= new THREE.MeshBasicMaterial({ map: texture , roughness: 1});
+  const textureW = new THREE.TextureLoader().load("../images/obstacle.png");
+  const obstacleMaterial= new THREE.MeshBasicMaterial({ map: textureW });
 
   const positions = [
-    { x: 27, y: 0.5, z: 26 },
+    { x: 27, y: 0.5, z: 26 }, // 1st
     { x: 10, y: 0.5, z: 15 },
     { x: 1, y: 0.5, z: 25 },
     { x: -35, y: 0.5, z: 15 }, //4th
@@ -255,11 +256,7 @@ const createObstacles = (scene, physicsWorld) => {
     { x: -5, y: 0.5, z: -8 },
     { x: 20, y: 0.5, z: -26 },
     { x: 92, y: 0.5, z: -25 },
-    
 
-    
-   // { x: 25, y: 0.5, z: 20 },
-    // Add more positions as needed
   ];
 
   positions.forEach((pos) => {
@@ -292,14 +289,11 @@ const updateObstacles = (obstacles) => {
 };
 
 
-
-
-
 const createObstacles1 = (scene, physicsWorld) => {
   const obstacles1 = [];
   //const obstacleMaterial = new THREE.MeshStandardMaterial({ color: 0xff0000 }); // Red color for obstacles
   const texture1 = new THREE.TextureLoader().load("../images/steel.png");
-  const obstacleMaterial1= new THREE.MeshBasicMaterial({ map: texture1 });
+  const obstacleMaterial1= new THREE.MeshBasicMaterial({ map: texture1,metalness:0.8,roughness:0.2  });
 
   const positions1 = [
     { x: -25, y: 0.5, z: 22 },
@@ -310,8 +304,6 @@ const createObstacles1 = (scene, physicsWorld) => {
     { x: 65, y: 0.5, z: -25 },
     { x: 72, y: 0.5, z: 2 },
     
-   // { x: 25, y: 0.5, z: 20 },
-    // Add more positions as needed
   ];
 
   positions1.forEach((pos) => {
@@ -343,32 +335,10 @@ const updateObstacles1 = (obstacles1) => {
   });
 };
 
-
-
 // CAMERA FOLLOW LOGIC (Chase View)
-// Updated CAMERA FOLLOW LOGIC (Stable Side View)
 const cameraOffset = new THREE.Vector3(-3, 2, 0); // Position to the side of the car
 const smoothFactor = 0.2; // Factor for smooth camera follow
 const fixedCameraY = 2; // Fixed height for the camera
-
-// const smoothCameraFollow = (camera, car) => {
-//     // Update camera position based on car's rotation
-//     const carDirection = new THREE.Vector3();
-//     car.getWorldDirection(carDirection); // Get the car's forward direction
-//     const carRight = new THREE.Vector3().crossVectors(carDirection, new THREE.Vector3(0, 1, 0)).normalize(); // Get the right direction of the car
-
-//     // Calculate the target position for the camera
-//     const targetPosition = car.position
-//         .clone()
-//         .add(carRight.clone().multiplyScalar(cameraOffset.x)) // Move to the side
-//         .setY(fixedCameraY); // Set a fixed height for the camera
-
-//     // Smoothly interpolate camera position
-//     camera.position.lerp(targetPosition, smoothFactor);
-
-//     // Make the camera look at the car
-//     camera.lookAt(car.position);
-// };
 
 // G A M E   W O R L D
 
@@ -418,6 +388,7 @@ const loadCarModel = async (scene) => {
             car.traverse((child) => {
                 if (child.isMesh) {
                     child.material = new THREE.MeshStandardMaterial({ color: 0x000000 });
+                    child.castShadow=true;
                 }
             });
             resolve(car);
@@ -519,84 +490,25 @@ const create3DEnvironment = async () => {
     const model = await loadTrack();
     const car = await loadCarModel(scene);
     
-    // Create an array to hold house models
-    const houses = [];
-    
-    // Load houses and add them to the array
-    //Tiny House
+ 
+    const createMirror = (scene) => {
+    const mirrorOptions={
+    clipBias:0.003,
+    textureWidth:window.innerWidth*window.devicePixelRatio,
+    textureHeight:window.innerWidth*window.devicePixelRatio,
+    color:0x889999,
+    multisample:4,
 
-    houses.push(await createHouse('../Models/tiny_house.glb', [0.6, 0.6, 0.6], [-10, 0.1, 25]));
-    houses.push(await createHouse('../Models/tiny_house.glb', [0.6, 0.6, 0.6], [-20, 0.1, 25]));
-    houses.push(await createHouse('../Models/tiny_house.glb', [0.6, 0.6, 0.6], [0, 0.1, 15]));
-    houses.push(await createHouse('../Models/tiny_house.glb', [0.6, 0.6, 0.6], [15, 0.1, 10]));
-    houses.push(await createHouse('../Models/tiny_house.glb', [0.6, 0.6, 0.6], [20, 0.1, 15]));
-    houses.push(await createHouse('../Models/tiny_house.glb', [0.6, 0.6, 0.6], [25, 0.1, 18]));
-    houses.push(await createHouse('../Models/tiny_house.glb', [0.6, 0.6, 0.6], [30, 0.1, 15]));
-    houses.push(await createHouse('../Models/tiny_house.glb', [0.6, 0.6, 0.6], [35, 0.1, 22]));
-    houses.push(await createHouse('../Models/tiny_house.glb', [0.6, 0.6, 0.6], [40, 0.1, 22]));
-    houses.push(await createHouse('../Models/tiny_house.glb', [0.6, 0.6, 0.6], [45, 0.1, 22]));
-    houses.push(await createHouse('../Models/tiny_house.glb', [0.6, 0.6, 0.6], [50, 0.1, 21]));
-    houses.push(await createHouse('../Models/tiny_house.glb', [0.6, 0.6, 0.6], [55, 0.1, 20]));
-    houses.push(await createHouse('../Models/tiny_house.glb', [0.6, 0.6, 0.6], [60, 0.1, 19]));
-    houses.push(await createHouse('../Models/tiny_house.glb', [0.6, 0.6, 0.6], [65, 0.1, 15]));
+    };
 
-    houses.push(await createHouse('../Models/tiny_house.glb', [0.6, 0.6, 0.6], [-30, 0.1, 30], {x: 0, y: Math.PI, z: 0 }));
-    houses.push(await createHouse('../Models/tiny_house.glb', [0.6, 0.6, 0.6], [-35, 0.1, 25], {x: 0, y: Math.PI, z: 0 }));
-    houses.push(await createHouse('../Models/tiny_house.glb', [0.6, 0.6, 0.6], [15, 0.1, 30], {x: 0, y: Math.PI, z: 0 }));
-    houses.push(await createHouse('../Models/tiny_house.glb', [0.6, 0.6, 0.6], [20, 0.1, 33], {x: 0, y: Math.PI, z: 0 }));
-    houses.push(await createHouse('../Models/tiny_house.glb', [0.6, 0.6, 0.6], [25, 0.1, 33], {x: 0, y: Math.PI, z: 0 }));
-    houses.push(await createHouse('../Models/tiny_house.glb', [0.6, 0.6, 0.6], [30, 0.1, 33], {x: 0, y: Math.PI, z: 0 }));
-    houses.push(await createHouse('../Models/tiny_house.glb', [0.6, 0.6, 0.6], [35, 0.1, 33], {x: 0, y: Math.PI, z: 0 }));
-    houses.push(await createHouse('../Models/tiny_house.glb', [0.6, 0.6, 0.6], [40, 0.1, 33], {x: 0, y: Math.PI, z: 0 }));
-    houses.push(await createHouse('../Models/tiny_house.glb', [0.6, 0.6, 0.6], [45, 0.1, 33], {x: 0, y: Math.PI, z: 0 }));
-    houses.push(await createHouse('../Models/tiny_house.glb', [0.6, 0.6, 0.6], [50, 0.1, 33], {x: 0, y: Math.PI, z: 0 }));
-    houses.push(await createHouse('../Models/tiny_house.glb', [0.6, 0.6, 0.6], [55, 0.1, 33], {x: 0, y: Math.PI, z: 0 }));
-    houses.push(await createHouse('../Models/tiny_house.glb', [0.6, 0.6, 0.6], [60, 0.1, 33], {x: 0, y: Math.PI, z: 0 }));
-    houses.push(await createHouse('../Models/tiny_house.glb', [0.6, 0.6, 0.6], [65, 0.1, 33], {x: 0, y: Math.PI, z: 0 }));
-
-
-    //Shanty House
-    houses.push(await createHouse('../Models/shanty.glb', [0.2, 0.2, 0.2], [-75, 0.1, -15], {x: 0, y: Math.PI / 2, z: 0 }));
-    houses.push(await createHouse('../Models/shanty.glb', [0.2, 0.2, 0.2], [-65, 0.1, -20], {x: 0, y: Math.PI / 2, z: 0 }));
-    houses.push(await createHouse('../Models/shanty.glb', [0.2, 0.2, 0.2], [-55, 0.1, -20], {x: 0, y: Math.PI / 2, z: 0 }));
-    houses.push(await createHouse('../Models/shanty.glb', [0.2, 0.2, 0.2], [-45, 0.1, -20], {x: 0, y: Math.PI / 2, z: 0 }));
-    houses.push(await createHouse('../Models/shanty.glb', [0.2, 0.2, 0.2], [-35, 0.1, -20], {x: 0, y: Math.PI / 2, z: 0 }));
-    houses.push(await createHouse('../Models/shanty.glb', [0.2, 0.2, 0.2], [-25, 0.1, -20], {x: 0, y: Math.PI / 2, z: 0 }));
-    houses.push(await createHouse('../Models/shanty.glb', [0.2, 0.2, 0.2], [-15, 0.1, -20], {x: 0, y: Math.PI / 2, z: 0 }));
-    houses.push(await createHouse('../Models/shanty.glb', [0.2, 0.2, 0.2], [-5, 0.1, -25], {x: 0, y: Math.PI / 2, z: 0 }));
-    houses.push(await createHouse('../Models/shanty.glb', [0.2, 0.2, 0.2], [5, 0.1, -34], {x: 0, y: Math.PI / 2, z: 0 }));
-    houses.push(await createHouse('../Models/shanty.glb', [0.2, 0.2, 0.2], [15, 0.1, -34], {x: 0, y: Math.PI / 2, z: 0 }));
-    houses.push(await createHouse('../Models/shanty.glb', [0.2, 0.2, 0.2], [25, 0.1, -34], {x: 0, y: Math.PI / 2, z: 0 }));
-    houses.push(await createHouse('../Models/shanty.glb', [0.2, 0.2, 0.2], [35, 0.1, -34], {x: 0, y: Math.PI / 2, z: 0 }));
-    houses.push(await createHouse('../Models/shanty.glb', [0.2, 0.2, 0.2], [45, 0.1, -34], {x: 0, y: Math.PI / 2, z: 0 }));
-    houses.push(await createHouse('../Models/shanty.glb', [0.2, 0.2, 0.2], [55, 0.1, -34], {x: 0, y: Math.PI / 2, z: 0 }));
-    houses.push(await createHouse('../Models/shanty.glb', [0.2, 0.2, 0.2], [65, 0.1, -34], {x: 0, y: Math.PI / 2, z: 0 }));
-
-    houses.push(await createHouse('../Models/shanty.glb', [0.2, 0.2, 0.2], [-55, 0.1, 0], {x: 0, y: -Math.PI / 2, z: 0 }));
-    houses.push(await createHouse('../Models/shanty.glb', [0.2, 0.2, 0.2], [-45, 0.1, 0], {x: 0, y: -Math.PI / 2, z: 0 }));
-    houses.push(await createHouse('../Models/shanty.glb', [0.2, 0.2, 0.2], [-35, 0.1, 0], {x: 0, y: -Math.PI / 2, z: 0 }));
-    houses.push(await createHouse('../Models/shanty.glb', [0.2, 0.2, 0.2], [-25, 0.1, 0], {x: 0, y: -Math.PI / 2, z: 0 }));
-    houses.push(await createHouse('../Models/shanty.glb', [0.2, 0.2, 0.2], [-15, 0.1, 0], {x: 0, y: -Math.PI / 2, z: 0 }));
-    houses.push(await createHouse('../Models/shanty.glb', [0.2, 0.2, 0.2], [-5, 0.1, 0], {x: 0, y: -Math.PI / 2, z: 0 }));
-    houses.push(await createHouse('../Models/shanty.glb', [0.2, 0.2, 0.2], [5, 0.1, -10], {x: 0, y: -Math.PI / 2, z: 0 }));
-    houses.push(await createHouse('../Models/shanty.glb', [0.2, 0.2, 0.2], [15, 0.1, -15], {x: 0, y: -Math.PI / 2, z: 0 }));
-    houses.push(await createHouse('../Models/shanty.glb', [0.2, 0.2, 0.2], [25, 0.1, -15], {x: 0, y: -Math.PI / 2, z: 0 }));
-
-    // Bar
-
-    houses.push(await createHouse('../Models/bar_shack.glb', [0.015, 0.015, 0.015], [10, 0.1, 11]));
-
-    //Everything
-    // houses.push(await createHouse('../Models/tree.glb', [0.5, 0.5, 0.5], [-90, 0.1, 15], {x: 0, y: Math.PI / 2, z: 0}));
-    // houses.push(await createHouse('../Models/tree.glb', [0.5, 0.5, 0.5], [-90, 0.1, -5], {x: 0, y: Math.PI / 2, z: 0}));
-    // houses.push(await createHouse('../Models/tree.glb', [0.5, 0.5, 0.5], [-90, 0.1, 45], {x: 0, y: Math.PI / 2, z: 0}));
-
-    houses.push(await createHouse('../Models/grass.glb', [2, 2, 2], [15, 0.1, 10]));
-    houses.push(await createHouse('../Models/grass.glb', [2, 2, 2], [15, 0.1, 20]));
-    houses.push(await createHouse('../Models/grass.glb', [2, 2, 2], [15, 0.1, 30]));
-
-    houses.push(await createHouse('../Models/soccer_field.glb', [0.5, 0.5, 0.5], [50, 0.1, -10], {x: 0, y: Math.PI / 2, z: 0}));
-    houses.push(await createHouse('../Models/playground.glb', [1.5, 1.5, 1.5], [85, 0.1, -30], {x: 0, y: Math.PI / 2, z: 0}));
+    const mirrorGeometry = new THREE.PlaneGeometry(5, 5);
+    const mirror =new Reflector(mirrorGeometry,mirrorOptions);
+    mirror.rotateX(Math.PI/1);
+    mirror.position.set(35, 0.005, 30 );
+    scene.add(mirror);
+  };
+    //const scene = new THREE.Scene();
+    createMirror(scene);
 
     const track = model.children[0].children[7];
     const textureLoader = new THREE.TextureLoader();
@@ -616,7 +528,7 @@ const create3DEnvironment = async () => {
     scene.add(track);
     scene.add(car);
     // Add all houses to the scene
-    houses.forEach(house => scene.add(house));
+    //houses.forEach(house => scene.add(house));
 
     // L I G H T I N G
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
@@ -631,6 +543,7 @@ const create3DEnvironment = async () => {
 
     const obstacles = createObstacles(scene, physicsWorld);
     const obstacles1 = createObstacles1(scene, physicsWorld);
+    //const obstacles2 = createObstacles2(scene, physicsWorld);
 
     //const cannonDebugger = new CannonDebugger(scene, physicsWorld);
     const time = new Time(100000000000, vehicle);
@@ -677,6 +590,7 @@ const animate = () => {
     controls.update();
     updateObstacles(obstacles); // Update obstacles
     updateObstacles1(obstacles1); 
+   // updateObstacles2(obstacles2); 
 
     // Check car's position against waypoints
     checkWaypointProgress(car.position);
@@ -717,4 +631,79 @@ window.addEventListener('keydown', () => { window.keyIsPressed = true; });
 window.addEventListener('keyup', () => { window.keyIsPressed = false; });
 
 create3DEnvironment();
+
+
+  //  // Create an array to hold house models
+  //  const houses = [];
+    
+  //  // Load houses and add them to the array
+  //  //Tiny House
+
+  //  houses.push(await createHouse('../Models/tiny_house.glb', [0.6, 0.6, 0.6], [-10, 0.1, 25]));
+  //  houses.push(await createHouse('../Models/tiny_house.glb', [0.6, 0.6, 0.6], [-20, 0.1, 25]));
+  //  houses.push(await createHouse('../Models/tiny_house.glb', [0.6, 0.6, 0.6], [0, 0.1, 15]));
+  //  houses.push(await createHouse('../Models/tiny_house.glb', [0.6, 0.6, 0.6], [15, 0.1, 10]));
+  //  houses.push(await createHouse('../Models/tiny_house.glb', [0.6, 0.6, 0.6], [20, 0.1, 15]));
+  //  houses.push(await createHouse('../Models/tiny_house.glb', [0.6, 0.6, 0.6], [25, 0.1, 18]));
+  //  houses.push(await createHouse('../Models/tiny_house.glb', [0.6, 0.6, 0.6], [30, 0.1, 15]));
+  //  houses.push(await createHouse('../Models/tiny_house.glb', [0.6, 0.6, 0.6], [35, 0.1, 22]));
+  //  houses.push(await createHouse('../Models/tiny_house.glb', [0.6, 0.6, 0.6], [40, 0.1, 22]));
+  //  houses.push(await createHouse('../Models/tiny_house.glb', [0.6, 0.6, 0.6], [45, 0.1, 22]));
+  //  houses.push(await createHouse('../Models/tiny_house.glb', [0.6, 0.6, 0.6], [50, 0.1, 21]));
+  //  houses.push(await createHouse('../Models/tiny_house.glb', [0.6, 0.6, 0.6], [55, 0.1, 20]));
+  //  houses.push(await createHouse('../Models/tiny_house.glb', [0.6, 0.6, 0.6], [60, 0.1, 19]));
+  //  houses.push(await createHouse('../Models/tiny_house.glb', [0.6, 0.6, 0.6], [65, 0.1, 15]));
+
+  //  houses.push(await createHouse('../Models/tiny_house.glb', [0.6, 0.6, 0.6], [-30, 0.1, 30], {x: 0, y: Math.PI, z: 0 }));
+  //  houses.push(await createHouse('../Models/tiny_house.glb', [0.6, 0.6, 0.6], [-35, 0.1, 25], {x: 0, y: Math.PI, z: 0 }));
+  //  houses.push(await createHouse('../Models/tiny_house.glb', [0.6, 0.6, 0.6], [15, 0.1, 30], {x: 0, y: Math.PI, z: 0 }));
+  //  houses.push(await createHouse('../Models/tiny_house.glb', [0.6, 0.6, 0.6], [20, 0.1, 33], {x: 0, y: Math.PI, z: 0 }));
+  //  houses.push(await createHouse('../Models/tiny_house.glb', [0.6, 0.6, 0.6], [25, 0.1, 33], {x: 0, y: Math.PI, z: 0 }));
+  //  houses.push(await createHouse('../Models/tiny_house.glb', [0.6, 0.6, 0.6], [30, 0.1, 33], {x: 0, y: Math.PI, z: 0 }));
+  //  houses.push(await createHouse('../Models/tiny_house.glb', [0.6, 0.6, 0.6], [35, 0.1, 33], {x: 0, y: Math.PI, z: 0 }));
+  //  houses.push(await createHouse('../Models/tiny_house.glb', [0.6, 0.6, 0.6], [40, 0.1, 33], {x: 0, y: Math.PI, z: 0 }));
+  //  houses.push(await createHouse('../Models/tiny_house.glb', [0.6, 0.6, 0.6], [45, 0.1, 33], {x: 0, y: Math.PI, z: 0 }));
+  //  houses.push(await createHouse('../Models/tiny_house.glb', [0.6, 0.6, 0.6], [50, 0.1, 33], {x: 0, y: Math.PI, z: 0 }));
+  //  houses.push(await createHouse('../Models/tiny_house.glb', [0.6, 0.6, 0.6], [55, 0.1, 33], {x: 0, y: Math.PI, z: 0 }));
+  //  houses.push(await createHouse('../Models/tiny_house.glb', [0.6, 0.6, 0.6], [60, 0.1, 33], {x: 0, y: Math.PI, z: 0 }));
+  //  houses.push(await createHouse('../Models/tiny_house.glb', [0.6, 0.6, 0.6], [65, 0.1, 33], {x: 0, y: Math.PI, z: 0 }));
+
+
+  //  //Shanty House
+  //  houses.push(await createHouse('../Models/shanty.glb', [0.2, 0.2, 0.2], [-75, 0.1, -15], {x: 0, y: Math.PI / 2, z: 0 }));
+  //  houses.push(await createHouse('../Models/shanty.glb', [0.2, 0.2, 0.2], [-65, 0.1, -20], {x: 0, y: Math.PI / 2, z: 0 }));
+  //  houses.push(await createHouse('../Models/shanty.glb', [0.2, 0.2, 0.2], [-55, 0.1, -20], {x: 0, y: Math.PI / 2, z: 0 }));
+  //  houses.push(await createHouse('../Models/shanty.glb', [0.2, 0.2, 0.2], [-45, 0.1, -20], {x: 0, y: Math.PI / 2, z: 0 }));
+  //  houses.push(await createHouse('../Models/shanty.glb', [0.2, 0.2, 0.2], [-35, 0.1, -20], {x: 0, y: Math.PI / 2, z: 0 }));
+  //  houses.push(await createHouse('../Models/shanty.glb', [0.2, 0.2, 0.2], [-25, 0.1, -20], {x: 0, y: Math.PI / 2, z: 0 }));
+  //  houses.push(await createHouse('../Models/shanty.glb', [0.2, 0.2, 0.2], [-15, 0.1, -20], {x: 0, y: Math.PI / 2, z: 0 }));
+  //  houses.push(await createHouse('../Models/shanty.glb', [0.2, 0.2, 0.2], [-5, 0.1, -25], {x: 0, y: Math.PI / 2, z: 0 }));
+  //  houses.push(await createHouse('../Models/shanty.glb', [0.2, 0.2, 0.2], [5, 0.1, -34], {x: 0, y: Math.PI / 2, z: 0 }));
+  //  houses.push(await createHouse('../Models/shanty.glb', [0.2, 0.2, 0.2], [15, 0.1, -34], {x: 0, y: Math.PI / 2, z: 0 }));
+  //  houses.push(await createHouse('../Models/shanty.glb', [0.2, 0.2, 0.2], [25, 0.1, -34], {x: 0, y: Math.PI / 2, z: 0 }));
+  //  houses.push(await createHouse('../Models/shanty.glb', [0.2, 0.2, 0.2], [35, 0.1, -34], {x: 0, y: Math.PI / 2, z: 0 }));
+  //  houses.push(await createHouse('../Models/shanty.glb', [0.2, 0.2, 0.2], [45, 0.1, -34], {x: 0, y: Math.PI / 2, z: 0 }));
+  //  houses.push(await createHouse('../Models/shanty.glb', [0.2, 0.2, 0.2], [55, 0.1, -34], {x: 0, y: Math.PI / 2, z: 0 }));
+  //  houses.push(await createHouse('../Models/shanty.glb', [0.2, 0.2, 0.2], [65, 0.1, -34], {x: 0, y: Math.PI / 2, z: 0 }));
+
+  //  houses.push(await createHouse('../Models/shanty.glb', [0.2, 0.2, 0.2], [-55, 0.1, 0], {x: 0, y: -Math.PI / 2, z: 0 }));
+  //  houses.push(await createHouse('../Models/shanty.glb', [0.2, 0.2, 0.2], [-45, 0.1, 0], {x: 0, y: -Math.PI / 2, z: 0 }));
+  //  houses.push(await createHouse('../Models/shanty.glb', [0.2, 0.2, 0.2], [-35, 0.1, 0], {x: 0, y: -Math.PI / 2, z: 0 }));
+  //  houses.push(await createHouse('../Models/shanty.glb', [0.2, 0.2, 0.2], [-25, 0.1, 0], {x: 0, y: -Math.PI / 2, z: 0 }));
+  //  houses.push(await createHouse('../Models/shanty.glb', [0.2, 0.2, 0.2], [-15, 0.1, 0], {x: 0, y: -Math.PI / 2, z: 0 }));
+  //  houses.push(await createHouse('../Models/shanty.glb', [0.2, 0.2, 0.2], [-5, 0.1, 0], {x: 0, y: -Math.PI / 2, z: 0 }));
+  //  houses.push(await createHouse('../Models/shanty.glb', [0.2, 0.2, 0.2], [5, 0.1, -10], {x: 0, y: -Math.PI / 2, z: 0 }));
+  //  houses.push(await createHouse('../Models/shanty.glb', [0.2, 0.2, 0.2], [15, 0.1, -15], {x: 0, y: -Math.PI / 2, z: 0 }));
+  //  houses.push(await createHouse('../Models/shanty.glb', [0.2, 0.2, 0.2], [25, 0.1, -15], {x: 0, y: -Math.PI / 2, z: 0 }));
+
+  //  // Bar
+
+  //  houses.push(await createHouse('../Models/bar_shack.glb', [0.015, 0.015, 0.015], [10, 0.1, 11]));
+
+  //  houses.push(await createHouse('../Models/grass.glb', [2, 2, 2], [15, 0.1, 10]));
+  //  houses.push(await createHouse('../Models/grass.glb', [2, 2, 2], [15, 0.1, 20]));
+  //  houses.push(await createHouse('../Models/grass.glb', [2, 2, 2], [15, 0.1, 30]));
+
+  //  houses.push(await createHouse('../Models/soccer_field.glb', [0.5, 0.5, 0.5], [50, 0.1, -10], {x: 0, y: Math.PI / 2, z: 0}));
+  //  houses.push(await createHouse('../Models/playground.glb', [1.5, 1.5, 1.5], [85, 0.1, -30], {x: 0, y: Math.PI / 2, z: 0}));
 
