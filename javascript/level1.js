@@ -5,6 +5,9 @@ import { FBXLoader } from "three/examples/jsm/loaders/FBXLoader.js";
 import * as CANNON from "cannon-es";
 import CannonDebugger from "cannon-es-debugger";
 
+const selections = JSON.parse(sessionStorage.getItem("selections"));
+console.log("Selections: ", selections.car);
+
 class Time {
   constructor(time) {
     this.time = time;
@@ -55,7 +58,7 @@ class Time {
 // GAME PARAMETERS
 const maxSteerVal = Math.PI / 8;
 const maxForce = 10;
-const frictionCoefficient = 0.02;
+const frictionCoefficient = 0.05;
 const thirdPersonView = {
   fieldOfView: 75,
   aspect: window.innerWidth / window.innerHeight,
@@ -199,7 +202,7 @@ const addWheel = (vehicle, position, axisWidth) => {
 const physicsCar = () => {
   const carBody = new CANNON.Body({
     mass: 20,
-    shape: new CANNON.Box(new CANNON.Vec3(1, 0.05, 0.5)),
+    shape: new CANNON.Box(new CANNON.Vec3(0.7, 0.05, 0.4)),
     position: new CANNON.Vec3(40, 0.1, 27.25),
   });
 
@@ -208,10 +211,10 @@ const physicsCar = () => {
   });
 
   const axisWidth = 0.5;
-  const wheelBody1 = addWheel(vehicle, { x: -1, z: 1 }, axisWidth);
-  const wheelBody2 = addWheel(vehicle, { x: -1, z: -1 }, axisWidth);
-  const wheelBody3 = addWheel(vehicle, { x: 1, z: -1 }, axisWidth);
-  const wheelBody4 = addWheel(vehicle, { x: 1, z: 1 }, axisWidth);
+  const wheelBody1 = addWheel(vehicle, { x: -0.7, z: 0.7 }, axisWidth);
+  const wheelBody2 = addWheel(vehicle, { x: -0.7, z: -0.7 }, axisWidth);
+  const wheelBody3 = addWheel(vehicle, { x: 0.7, z: -0.7 }, axisWidth);
+  const wheelBody4 = addWheel(vehicle, { x: 0.7, z: 0.7 }, axisWidth);
 
   return { vehicle, wheelBody1, wheelBody2, wheelBody3, wheelBody4 };
 };
@@ -356,29 +359,80 @@ const loadTrack = () => {
 };
 
 const loadCarModel = async (scene) => {
-  return new Promise((resolve, reject) => {
-    const loader = new GLTFLoader();
-    loader.load(
-      "../Models/mazda_rx7_stylised.glb",
-      (gltf) => {
-        const car = gltf.scene;
-        car.scale.set(0.003, 0.003, 0.003); // Scale car
-        car.position.set(1000, 1000, 1000); // Position car
-        car.position.y += 0.05; // Slightly raises car above the track to avoid z-fighting
-        car.rotateX(-90); // Rotate car
-        car.traverse((child) => {
-          if (child.isMesh) {
-            child.material = new THREE.MeshStandardMaterial({
-              color: 0xb22222,
-            });
-          }
-        });
-        resolve(car);
-      },
-      undefined,
-      (error) => reject(error)
-    );
-  });
+  if (selections.car == "Car A") {
+    return new Promise((resolve, reject) => {
+      const loader = new GLTFLoader();
+      loader.load(
+        "../Models/tesla_s.glb",
+        (gltf) => {
+          const car = gltf.scene;
+          car.scale.set(0.008, 0.008, 0.008);
+          car.position.set(1000, 1000, 1000);
+          car.position.y += 0.05;
+          car.traverse((child) => {
+            if (child.isMesh) {
+              //child.material = new THREE.MeshStandardMaterial({
+              //  color: 0xb22222,
+              //});
+              child.rotateZ(-91.1);
+            }
+          });
+          resolve(car);
+        },
+        undefined,
+        (error) => reject(error)
+      );
+    });
+  } else if (selections.car == "Car B") {
+    return new Promise((resolve, reject) => {
+      const loader = new GLTFLoader();
+      loader.load(
+        "../Models/mazda_rx7_stylised.glb",
+        (gltf) => {
+          const car = gltf.scene;
+          car.scale.set(0.003, 0.003, 0.003); // Scale car
+          car.position.set(1000, 1000, 1000); // Position car
+          car.position.y += 0.05; // Slightly raises car above the track to avoid z-fighting
+          car.rotateX(-90); // Rotate car
+          car.traverse((child) => {
+            //if (child.isMesh) {
+            //child.material = new THREE.MeshStandardMaterial({
+            //  color: 0xb22222,
+            //});
+            //}
+          });
+          resolve(car);
+        },
+        undefined,
+        (error) => reject(error)
+      );
+    });
+  } else {
+    return new Promise((resolve, reject) => {
+      const loader = new GLTFLoader();
+      loader.load(
+        "../Models/cyberpunk_car.glb",
+        (gltf) => {
+          const car = gltf.scene;
+          car.scale.set(0.003, 0.003, 0.003); // Scale car
+          car.position.set(1000, 1000, 1000); // Position car
+          car.position.y += 0.05; // Slightly raises car above the track to avoid z-fighting
+          car.rotateX(-90); // Rotate car
+          car.traverse((child) => {
+            if (child.isMesh) {
+              //child.material = new THREE.MeshStandardMaterial({
+              //  color: 0xb22222,
+              //});
+              child.rotateY(89.5);
+            }
+          });
+          resolve(car);
+        },
+        undefined,
+        (error) => reject(error)
+      );
+    });
+  }
 };
 
 const loadSkybox = (scene) => {
@@ -957,7 +1011,7 @@ const create3DEnvironment = async () => {
   const animate = () => {
     window.requestAnimationFrame(animate);
     physicsWorld.fixedStep();
-    //cannonDebugger.update();
+    cannonDebugger.update();
     car.position.copy(vehicle.chassisBody.position);
     car.quaternion.copy(vehicle.chassisBody.quaternion);
     controls.update();
@@ -978,11 +1032,8 @@ const create3DEnvironment = async () => {
     } else {
       disableInputControls(vehicle);
     }
-
-    const boundingBox = new THREE.Box3().setFromObject(
-      car.children[0].children[0].children[0].children[0].children[0]
-        .children[0]
-    );
+    console.log("Car: ", car);
+    const boundingBox = new THREE.Box3().setFromObject(car);
     const finishBox = new THREE.Box3().setFromObject(finish);
     if (boundingBox.intersectsBox(finishBox)) {
       time.state = "stopped";
