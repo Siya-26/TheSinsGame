@@ -239,6 +239,22 @@ const boundaries = (positions) => {
     body.position.set(0, 0.5, 0)
     physicsWorld.addBody(body)
 }
+//MiniMap
+const miniMap = document.getElementById('mini_map');
+const miniMapRenderer =new THREE.WebGLRenderer({ antialias: true });
+miniMapRenderer.setSize(miniMap.offsetWidth,miniMap.offsetHeight);
+miniMap.appendChild(miniMapRenderer.domElement);
+
+const miniMapCamera= new THREE.OrthographicCamera(
+    45,
+    3,
+    0.1,
+    100
+);
+miniMapCamera.position.set(0,95,0);
+miniMapCamera.lookAt(0,0,0);
+
+
 
 // OBSTACLE CREATION FUNCTION WHICH YOU MUST AVOID 
 const createObstacles = (scene, physicsWorld) => {
@@ -339,6 +355,7 @@ const updateObstacles1 = (obstacles1) => {
 const cameraOffset = new THREE.Vector3(-3, 2, 0); // Position to the side of the car
 const smoothFactor = 0.2; // Factor for smooth camera follow
 const fixedCameraY = 2; // Fixed height for the camera
+
 
 // G A M E   W O R L D
 
@@ -528,7 +545,6 @@ const create3DEnvironment = async () => {
     scene.add(track);
     scene.add(car);
     // Add all houses to the scene
-    //houses.forEach(house => scene.add(house));
 
     // L I G H T I N G
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
@@ -580,6 +596,10 @@ const checkWaypointProgress = (carPosition) => {
     }
 };
 
+const renderMiniMap = () => {
+  miniMapRenderer.render(scene, miniMapCamera);
+};
+
 // Inside your animate function, after updating the car's position:
 const animate = () => {
     window.requestAnimationFrame(animate);
@@ -619,8 +639,10 @@ const animate = () => {
     // Smooth camera follow the car
     smoothCameraFollow(camera, car);
 
+
     // Render the scene
     renderer.render(scene, camera);
+    renderMiniMap();
 };
 animate();
 };
