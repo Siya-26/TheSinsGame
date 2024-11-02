@@ -1,62 +1,15 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
-import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader.js';
 import * as CANNON from 'cannon-es';
-import CannonDebugger from 'cannon-es-debugger';
+import Controls from './controls.js';
+import { initializeCamera, smoothCameraFollow, toggleCameraView } from './camera.js';
+import Time from './time.js';
+import { loadCarModel, loadTrack, loadHouseModel, loadSkybox, loadStreetlightModel } from './modelLoader.js';
+import { PointerLockControls } from 'three/examples/jsm/controls/PointerLockControls.js';
 
-class Time {
-    constructor(time) {
-        this.time = time;
-        this.state = "start";
-        this.count = 3;
-        this.countdownInterval = null;
-        this.timerInterval = null;
-    }
 
-    // Method to stop the timer and show the game-over screen if time runs out
-    stopTime() {
-        if (this.time === 0 && this.state === "running") {
-            clearInterval(this.timerInterval); // Stop the timer
-            this.state = "stopped"; // Update the state
-            window.location.href = 'lostScreen1.html'; // Redirect to lost screen
-        }
-        else if(this.time != 0 && this.state === "stopped"){
-            clearInterval(this.countdownInterval);
-            window.location.href = '../html/winScreen1.html';
-        }
-    }
-    
-
-    // Method to start the main timer after the countdown finishes
-    runTime() {
-        this.state = "running"; // Update state to running
-        this.timerInterval = setInterval(() => {
-            this.time -= 1; // Decrease time
-            document.getElementById('stopwatch').innerText = this.time; // Update stopwatch display
-            this.stopTime(); // Check if time should stop
-        }, 1000); // Update every second
-    }
-
-    // Method to handle the countdown from 3
-    startTime() {
-        this.countdownInterval = setInterval(() => {
-            this.count -= 1; // Decrease countdown
-            console.log(this.count);
-            document.getElementById('countdown').innerText = this.count; // Update countdown display
-
-            if (this.count === 0) {
-                clearInterval(this.countdownInterval); // Stop the countdown
-                document.getElementById('countdown').innerText = ''; // Clear the countdown display
-                this.runTime(); // Start the main timer
-            }
-        }, 1000); // Update every second
-    }
-}
 
 // GAME PARAMETERS
-const maxSteerVal = Math.PI / 8;
-const maxForce = 10;
 const frictionCoefficient = 0.02;
 const thirdPersonView = {
     fieldOfView: 75,
@@ -65,110 +18,6 @@ const thirdPersonView = {
     farPlane: 100,
 };
 
-// INPUT CONTROLS
-const enableInputControls = (vehicle) => {
-    window.addEventListener('keydown', (event) => {
-        switch (event.key) {
-            case 'ArrowUp':
-            case 'w':
-                vehicle.setWheelForce(maxForce, 0);
-                vehicle.setWheelForce(maxForce, 1);
-                break;
-            case 'ArrowDown':
-            case 's':
-                vehicle.setWheelForce(-maxForce / 2, 0);
-                vehicle.setWheelForce(-maxForce / 2, 1);
-                break;
-            case 'ArrowLeft':
-            case 'a':
-                vehicle.setSteeringValue(maxSteerVal, 0);
-                vehicle.setSteeringValue(maxSteerVal, 1);
-                break;
-            case 'ArrowRight':
-            case 'd':
-                vehicle.setSteeringValue(-maxSteerVal, 0);
-                vehicle.setSteeringValue(-maxSteerVal, 1);
-                break;
-        }
-    });
-    
-    window.addEventListener('keyup', (event) => {
-        switch (event.key) {
-            case 'w':
-            case 'ArrowUp':
-                vehicle.setWheelForce(0, 0);
-                vehicle.setWheelForce(0, 1);
-                break;
-            case 's':
-            case 'ArrowDown':
-                vehicle.setWheelForce(0, 0);
-                vehicle.setWheelForce(0, 1);
-                break;
-            case 'a':
-            case 'ArrowLeft':
-                vehicle.setSteeringValue(0, 0);
-                vehicle.setSteeringValue(0, 1);
-                break;
-            case 'd':
-            case 'ArrowRight':
-                vehicle.setSteeringValue(0, 0);
-                vehicle.setSteeringValue(0, 1);
-                break;
-        }
-    });
-};
-
-const disableInputControls = (vehicle) => {
-    window.addEventListener('keydown', (event) => {
-        switch (event.key) {
-            case 'ArrowUp':
-            case 'w':
-                vehicle.setWheelForce(0, 0);
-                vehicle.setWheelForce(0, 1);
-                break;
-            case 'ArrowDown':
-            case 's':
-                vehicle.setWheelForce(0, 0);
-                vehicle.setWheelForce(0, 1);
-                break;
-            case 'ArrowLeft':
-            case 'a':
-                vehicle.setSteeringValue(0, 0);
-                vehicle.setSteeringValue(0, 1);
-                break;
-            case 'ArrowRight':
-            case 'd':
-                vehicle.setSteeringValue(0, 0);
-                vehicle.setSteeringValue(0, 1);
-                break;
-        }
-    });
-    
-    window.addEventListener('keyup', (event) => {
-        switch (event.key) {
-            case 'w':
-            case 'ArrowUp':
-                vehicle.setWheelForce(0, 0);
-                vehicle.setWheelForce(0, 1);
-                break;
-            case 's':
-            case 'ArrowDown':
-                vehicle.setWheelForce(0, 0);
-                vehicle.setWheelForce(0, 1);
-                break;
-            case 'a':
-            case 'ArrowLeft':
-                vehicle.setSteeringValue(0, 0);
-                vehicle.setSteeringValue(0, 1);
-                break;
-            case 'd':
-            case 'ArrowRight':
-                vehicle.setSteeringValue(0, 0);
-                vehicle.setSteeringValue(0, 1);
-                break;
-        }
-    });
-};
 // PHYSICS WORLD
 const physicsWorld = new CANNON.World({
     gravity: new CANNON.Vec3(0, -9.82, 0),
@@ -235,16 +84,13 @@ const boundaries = (positions) => {
         body.addShape(sphereShape, new CANNON.Vec3(positions[i]*s, positions[i+1]*s, positions[i+2]*s));
     }
 
-    body.position.set(0, 0.5, 0)
+    body.position.set(0, 0.4, 0)
     physicsWorld.addBody(body)
 }
 
 
 // CAMERA FOLLOW LOGIC (Chase View)
 // Updated CAMERA FOLLOW LOGIC (Stable Side View)
-const cameraOffset = new THREE.Vector3(-3, 2, 0); // Position to the side of the car
-const smoothFactor = 0.2; // Factor for smooth camera follow
-const fixedCameraY = 2; // Fixed height for the camera
 
 // const smoothCameraFollow = (camera, car) => {
 //     // Update camera position based on car's rotation
@@ -313,107 +159,14 @@ const finishPlane = () => {
     return plane;
 };
 
-const loader = new FBXLoader();
-
-const loadTrack = () => {
-    return new Promise((resolve, reject) => {
-        loader.load(
-            '../Models/Formula_Track.fbx',
-            (fbx) => resolve(fbx),
-            (xhr) => console.log(`${(xhr.loaded / xhr.total * 100)}% loaded`),
-            (error) => reject(error)
-        );
-    });
-};
-
-const loadCarModel = async (scene) => {
-    return new Promise((resolve, reject) => {
-        const loader = new GLTFLoader();
-        loader.load('../Models/mazda_rx7_stylised.glb', (gltf) => {
-            const car = gltf.scene;
-            car.scale.set(0.0030, 0.0030, 0.0030);  // Scale car
-            car.position.set(1000, 1000, 1000);  // Position car
-            car.position.y += 0.05; // Slightly raises car above the track to avoid z-fighting
-            car.rotateX(-90);  // Rotate car
-            car.traverse((child) => {
-                if (child.isMesh) {
-                    child.material = new THREE.MeshStandardMaterial({ color: 0x000000 });
-                }
-            });
-            resolve(car);
-        }, undefined, (error) => reject(error));
-    });
-};
-
-const loadSkybox = (scene) => {
-    const loader = new THREE.CubeTextureLoader();
-    const texture = loader.load([
-        '../skybox/px.png', // Right
-        '../skybox/nx.png', // Left
-        '../skybox/py.png', // Top
-        '../skybox/ny.png', // Bottom
-        '../skybox/pz.png', // Front
-        '../skybox/nz.png', // Back
-    ]);
-
-    scene.background = texture; // Set the skybox as the scene background
-};
-
-let isFirstPerson = false; // Start with 3rd person by default
-
-// CAMERA OFFSET FOR BOTH VIEWS
-const thirdPersonOffset = new THREE.Vector3(-3, 2, 0); // Third-person view (chase view)
-const firstPersonOffset = new THREE.Vector3(1, 1, 0); // First-person view (inside car)
-
-// SMOOTH CAMERA FOLLOW FUNCTION (Updated to support both views)
-const smoothCameraFollow = (camera, car) => {
-    if (isFirstPerson) {
-        // 1st person view: Position camera inside the car
-        const targetPosition = car.position.clone().add(firstPersonOffset);
-        camera.position.lerp(targetPosition, smoothFactor);
-    } else {
-        // 3rd person view: Chase view logic
-        const carDirection = new THREE.Vector3();
-        car.getWorldDirection(carDirection); // Get the car's forward direction
-        const carRight = new THREE.Vector3().crossVectors(carDirection, new THREE.Vector3(0, 1, 0)).normalize(); // Get the right direction of the car
-        
-        const targetPosition = car.position
-            .clone()
-            .add(carRight.clone().multiplyScalar(thirdPersonOffset.x)) // Move to the side
-            .setY(fixedCameraY); // Set a fixed height for the camera
-
-        camera.position.lerp(targetPosition, smoothFactor);
-    }
-
-    // Always make the camera look at the car
-    camera.lookAt(car.position);
-};
-
-// TOGGLE CAMERA VIEW ON 'P' KEY PRESS
-window.addEventListener('keydown', (event) => {
-    if (event.key === 'p' || event.key === 'P') {
-        isFirstPerson = !isFirstPerson; // Toggle between 1st and 3rd person
-    }
-});
-
-// Function to load a house model
-const loadHouseModel = async (path, scale, position) => {
-    return new Promise((resolve, reject) => {
-        const loader = new GLTFLoader();
-        loader.load(path, (gltf) => {
-            const house = gltf.scene;
-            house.scale.set(...scale); // Set scale using spread operator
-            house.position.set(...position); // Set position using spread operator
-            resolve(house);
-        }, undefined, (error) => reject(error));
-    });
-};
-
 const createHouse = async (modelPath, scale, position, rotation = { x: 0, y: 0, z: 0 }) => {
     const house = await loadHouseModel(modelPath, scale, position);
-    house.rotation.set(rotation.x, rotation.y, rotation.z); // Apply rotation
+    house.rotation.set(rotation.x, rotation.y, rotation.z); 
+    house.castShadow = true;
+    house.receiveShadow = true;
     return house;
 };
+
 // CREATE ENVIRONMENT
 const create3DEnvironment = async () => {
     const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -421,20 +174,27 @@ const create3DEnvironment = async () => {
     renderer.shadowMap.enabled = true; // Enable shadow mapping
     renderer.shadowMap.type = THREE.PCFSoftShadowMap; // Set shadow map type
     document.body.appendChild(renderer.domElement);
-
-    const camera = new THREE.PerspectiveCamera(
-        thirdPersonView.fieldOfView,
-        thirdPersonView.aspect,
-        thirdPersonView.nearPlane,
-        thirdPersonView.farPlane
-    );
-    camera.position.set(0, 10, 0);
-
+    
+    const camera = initializeCamera(thirdPersonView); 
+    
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableZoom = true; // Enable zooming
     controls.minDistance = 5;   // Set minimum zoom distance
     controls.maxDistance = 100;  // Set maximum zoom distance
     const scene = new THREE.Scene();
+
+    const pointerControls = new PointerLockControls(camera, document.body);
+    document.addEventListener('click', () => {
+    pointerControls.lock();
+});
+
+
+    // TOGGLE CAMERA VIEW ON 'P' KEY PRESS
+    window.addEventListener('keydown', (event) => {
+        if (event.key === 'p' || event.key === 'P') {
+            toggleCameraView(); // Toggle view between first and third person
+        }
+    });
 
     loadSkybox(scene);
 
@@ -482,7 +242,7 @@ const create3DEnvironment = async () => {
 
     const plane = buildPlane();
     const model = await loadTrack();
-    const car = await loadCarModel(scene);
+    const car = await loadCarModel();
     
     // Create an array to hold house models
     const building = [];
@@ -562,8 +322,8 @@ const create3DEnvironment = async () => {
     track.material[3] = trackMaterial;
     track.material[4] = trackMaterial;
     track.material[5].emissive = 0xB0B0B0;
-    const t = model.children[0].children[7];
-    boundaries(t.geometry.attributes.position.array);
+    //const t = model.children[0].children[7];
+    boundaries(track.geometry.attributes.position.array);
     const finish = finishPlane();
     scene.add(finish);
 
@@ -575,7 +335,7 @@ const create3DEnvironment = async () => {
     building.forEach(house => scene.add(house));
 
     // L I G H T I N G
-    const ambientLight = new THREE.AmbientLight(0x555577, 0.2); 
+    const ambientLight = new THREE.AmbientLight(0x555577, 5); 
     scene.add(ambientLight);
 
     const directionalLight = new THREE.DirectionalLight(0xCCCCCC, 0.4);
@@ -593,11 +353,17 @@ const create3DEnvironment = async () => {
     spotlight.penumbra = 0.5;
     spotlight.decay = 2;
     spotlight.distance = 50;
+    spotlight.castShadow = true;
     scene.add(spotlight);
 
     //const cannonDebugger = new CannonDebugger(scene, physicsWorld);
-    const time = new Time(100, vehicle);
+    const time = new Time(600, vehicle);
     time.startTime();
+
+    const inputControls = new Controls(vehicle);
+    if (time.state === "running") {
+        inputControls.enable();
+    }
 
   const waypoints = [
     new THREE.Vector3(0, 0, 0),
@@ -651,14 +417,21 @@ const animate = () => {
 
     // Enable or disable input controls based on time state
     if (time.state === "running") {
-        enableInputControls(vehicle);
+        inputControls.enable();
     } else {
-        disableInputControls(vehicle);
+        inputControls.disable();
     }
 
-    const boundingBox = new THREE.Box3().setFromObject(car.children[0].children[0].children[0].children[0].children[0].children[0]);
+    let boundingBox;
+    try {
+        boundingBox = new THREE.Box3().setFromObject(car);
+    } catch (error) {
+        console.error("Error accessing car bounding box:", error);
+    }
+
+    // Check for collision with the finish line
     const finishBox = new THREE.Box3().setFromObject(finish);
-    if(boundingBox.intersectsBox(finishBox)){
+    if (boundingBox && finishBox && boundingBox.intersectsBox(finishBox)) {
         time.state = "stopped";
     }
 
