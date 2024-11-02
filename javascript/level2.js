@@ -299,7 +299,7 @@ const createObstacles1 = (scene, physicsWorld) => {
     { x: -25, y: 0.5, z: 22 },
     { x: -10, y: 0.5, z: 30 }, //2nd
     { x: -55, y: 0.5, z: 14 },
-    { x: -25, y: 0.5, z: -8 },
+    { x: -25, y: 0.5, z: -8.5 },
     { x: 5, y: 0.5, z: -22 },
     { x: 65, y: 0.5, z: -25 },
     { x: 72, y: 0.5, z: 2 },
@@ -465,6 +465,7 @@ const createHouse = async (modelPath, scale, position, rotation = { x: 0, y: 0, 
     house.rotation.set(rotation.x, rotation.y, rotation.z); // Apply rotation
     return house;
 };
+
 // CREATE ENVIRONMENT
 const create3DEnvironment = async () => {
     const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -501,11 +502,13 @@ const create3DEnvironment = async () => {
 
     };
 
-    const mirrorGeometry = new THREE.PlaneGeometry(1, 2);
+    const mirrorGeometry = new THREE.PlaneGeometry(1.2, 2.2);
     const mirror =new Reflector(mirrorGeometry,mirrorOptions);
-    mirror.rotateY(-Math.PI/2);
-    mirror.position.set(-25.8, 0.005, -8);
+    const mirror1 =new Reflector(mirrorGeometry,mirrorOptions);
+    mirror.rotateY(-Math.PI/3);
+    mirror.position.set(-25.5, 0.005, -8);
     scene.add(mirror);
+    
   };
     //const scene = new THREE.Scene();
     createMirror(scene);
@@ -580,6 +583,32 @@ const checkWaypointProgress = (carPosition) => {
     }
 };
 
+//M A P
+
+// const height = 50;
+// const width = 50;
+// const mapHeight = 100;
+// const mapWidth = 100;
+
+// const renderTarget = new THREE.WebGLRenderTarget(width, height);
+
+// const cameraMap = new THREE.OrthographicCamera(-mapWidth / 2, mapWidth / 2, mapHeight / 2, -mapHeight / 2, 1, 1000);
+// cameraMap.position.set(0, height, 0); // Adjust height as necessary
+// cameraMap.lookAt(new THREE.Vector3(0, 0, 0));
+
+// function renderMap() {
+//   renderer.setRenderTarget(renderTarget);
+//   renderer.render(scene, cameraMap);
+//   renderer.setRenderTarget(null); // Reset to default framebuffer
+// }
+
+// const mapMaterial = new THREE.MeshBasicMaterial({ map: renderTarget.texture });
+// const mapGeometry = new THREE.PlaneGeometry(mapWidth, mapHeight);
+// const mapMesh = new THREE.Mesh(mapGeometry, mapMaterial);
+// mapMesh.rotation.x = -Math.PI / 2; // Lay flat
+// mapMesh.position.set(width / 2, mapHeight / 2, 0); // Adjust for the top right corner
+// scene.add(mapMesh);
+
 // Inside your animate function, after updating the car's position:
 const animate = () => {
     window.requestAnimationFrame(animate);
@@ -591,6 +620,8 @@ const animate = () => {
     updateObstacles(obstacles); // Update obstacles
     updateObstacles1(obstacles1); 
    // updateObstacles2(obstacles2); 
+
+  //  renderMap(); // Update the map texture
 
     // Check car's position against waypoints
     checkWaypointProgress(car.position);
