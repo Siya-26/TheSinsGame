@@ -13,12 +13,12 @@ export default function Stand() {
     const stand = new THREE.Group();
 
     const texture = new THREE.TextureLoader().load(
-        '../dist/crowd.png'
+        "../dist/Crowd.jpeg"
     )
 
     const box = new THREE.Mesh(
         new THREE.BoxGeometry(200,2*trackLength,300),
-        new THREE.MeshLambertMaterial({map: texture})
+        new THREE.MeshLambertMaterial({color: 0x0000ff})
     )
 
     stand.add(box)

@@ -56,12 +56,14 @@
 
 		<button id="button"> Start </button>
 	</div>
-	<div id="mileage" class="box6">
+	<div id="mileage" class="box6 " style="display: none;"  >
 		<h5>Mileage : 60</h5>
 	</div>
 	<div id="closest" class="box7">
 		<h5>Next-can : 60</h5>
 	</div>
+
+	
 
 	<div id="gameover" class="box5" style="display: none;">
         <h1>Game Over!</h1>
@@ -81,10 +83,16 @@
         </div>
     </div>
         
-    </div>
+    
     
         
-    </div>
+	<div id ="standings" class="box5" style="display: none;">
+		<h1 id="gameOverMessage">Game Over!</h1>
+        <div class="button-container">
+            <button onclick="window.location.href='level4.html'">Play Again</button>
+            <button onclick="window.location.href='mainMenu.html'">Go Home</button>
+        </div>
+	</div>
     
 
 	

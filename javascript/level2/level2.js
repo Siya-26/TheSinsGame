@@ -1,300 +1,346 @@
-// import * as THREE from 'three';
-// import { Camera } from '../camera';
-// import { Renderer } from '../renderer';
-// import { Game } from '../game';
-// import { Physics, Vehicle } from '../physics';
-// import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
-// import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
-// import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader.js';
-// // import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
-
-// const loader = new FBXLoader();
-// const loader1 = new GLTFLoader()
-
-
-
-// const buildPlane = () => {
-//     const roadWidth = 256;
-//     const roadLength = 256;
-//     const geometry = new THREE.PlaneGeometry(roadWidth, roadLength);
-//     const material = new THREE.MeshBasicMaterial({ color: 0xcccccc });
-//     const plane = new THREE.Mesh(geometry, material);
-//     plane.rotation.x = -Math.PI / 2;
-//     return plane;
-// };
-
-// const finishPlane = () => {
-//     const roadWidth = 8;
-//     const roadLength = 2;
-//     const geometry = new THREE.PlaneGeometry(roadWidth, roadLength);
-//     const material = new THREE.MeshBasicMaterial({ color: 0xcccccc });
-//     const plane = new THREE.Mesh(geometry, material);
-//     plane.position.set(45, 0.1, 27.25);
-//     plane.rotation.y = -Math.PI / 2;
-//     return plane;
-// };
-
-// const loadHouseModel = async (path, scale, position) => {
-//     return new Promise((resolve, reject) => {
-//         const loader = new GLTFLoader();
-//         loader.load(path, (gltf) => {
-//             const house = gltf.scene;
-//             house.scale.set(...scale); // Set scale using spread operator
-//             house.position.set(...position); // Set position using spread operator
-//             resolve(house);
-//         }, undefined, (error) => reject(error));
-//     });
-// };
-
-// const createHouse = async (modelPath, scale, position, rotation = { x: 0, y: 0, z: 0 }) => {
-//     const house = await loadHouseModel(modelPath, scale, position);
-//     house.rotation.set(rotation.x, rotation.y, rotation.z); // Apply rotation
-//     return house;
-// };
-
-// const loadHouses = async (houses) => {
-
-//     const positions = [[-10, 0.1, 25],[-20, 0.1, 25],[0, 0.1, 15],[15, 0.1, 10],[20, 0.1, 15],[25, 0.1, 18],[30, 0.1, 15],[35, 0.1, 22],[40, 0.1, 22],[45, 0.1, 22],[50, 0.1, 21], [55, 0.1, 20], [60, 0.1, 19] ,[65, 0.1, 15]];
-//     positions.forEach( async (position) => {
-//         houses.push(await createHouse('../../Models/level2/level2-models/boy.glb', [0.6, 0.6, 0.6], position));
-//     })
-
-//     const positionsB = [[-30, 0.1, 30],[-35, 0.1, 25],[15, 0.1, 30],[20, 0.1, 33],[25, 0.1, 33],[30, 0.1, 33],[35, 0.1, 33],[40, 0.1, 33],[45, 0.1, 33],[50, 0.1, 33],[55, 0.1, 33],[60, 0.1, 33],[65, 0.1, 33]];
-
-//     positionsB.forEach( async (position) => {
-//         houses.push(await createHouse('../../Models/level2/level2-models/tiny_house.glb', [0.6, 0.6, 0.6], position, {x: 0, y: Math.PI, z: 0 }));
-//     })
-
-//     const positionsE = [[0, 0.1, 10],   // Near the center
-//     [-10, 0.1, 15], // Slightly left of center
-//     [10, 0.1, 20],  // Slightly right of center
-//     [-5, 0.1, 30],  // Close to center
-//     [5, 0.1, 30],   // Close to center
-//     [0, 0.1, 35],   // Center
-//     [-8, 0.1, 40],  // Slightly left
-//     [8, 0.1, 40],   // Slightly right
-//     [-3, 0.1, 45],  // Closer to center
-//     [3, 0.1, 45],   // Closer to center
-//     [0, 0.1, 50],   // Center
-//     [-5, 0.1, 55],  // Near center
-//     [5, 0.1, 55]]    // Near center];
-
-//     positionsE.forEach( async (position) => {
-//         houses.push(await createHouse('../../Models/level2/level2-models/obstacle.glb', [1, 1, 1], position, {x: 0, y: Math.PI, z: 0 }));
-//     })
-
-
-//     const positionsC = [[-75, 0.1, -15],[-65, 0.1, -20],[-55, 0.1, -20],[-45, 0.1, -20],[-35, 0.1, -20],[-25, 0.1, -20],[-15, 0.1, -20],[-5, 0.1, -25],[5, 0.1, -34],[15, 0.1, -34],[25, 0.1, -34],[35, 0.1, -34],[45, 0.1, -34],[55, 0.1, -34],[65, 0.1, -34],[-55, 0.1, 0],[-45, 0.1, 0],[-35, 0.1, 0],[-25, 0.1, 0],[-15, 0.1, 0],[-5, 0.1, 0],[5, 0.1, -10],[15, 0.1, -15],[25, 0.1, -15]];
-//     positionsC.forEach( async (position) => {
-//         houses.push(await createHouse('../../Models/level2/level2-models/condo.glb', [0.09, 0.09, 0.09], position, {x: 0, y: Math.PI / 2, z: 0 }));
-//     })
-
-//     const positionsD = [[15, 0.1, 10],[15, 0.1, 20],[15, 0.1, 30]];
-//     positionsD.forEach( async (position) => {
-//         houses.push(await createHouse('../../Models/level2/level2-models/old_tree.glb', [1, 1, 1], position));
-//     })
-
-//     houses.push(await createHouse('../../Models/level2/level2-models/bar_shack.glb', [0.015, 0.015, 0.015], [10, 0.1, 11]));
-//     houses.push(await createHouse('../../Models/level2/level2-models/tree_of_life.glb', [0.5, 0.5, 0.5], [50, 0.1, -10], {x: 0, y: Math.PI / 2, z: 0}));
-//     houses.push(await createHouse('../../Models/level2/level2-models/playground.glb', [1.5, 1.5, 1.5], [85, 0.1, -30], {x: 0, y: Math.PI / 2, z: 0}));
-    
-// }
-// //Models/level2/level2-models/track-models/Gravel/GravelPit.glb
-// const loadTrackModel = () => {
-//     return new Promise((resolve, reject) => {
-//         loader.load(
-//             '../../Models/level2/level2-models/track-models/drift/Drift.fbx',
-//             (fbx) => {
-//                 console.log(fbx); // Log the loaded FBX model for inspection
-//                 resolve(fbx);
-//             },
-//             (xhr) => console.log(`${(xhr.loaded / xhr.total * 100)}% loaded`),
-//             (error) => reject(error)
-//         );
-//     });
-// };
-
-
-// // const loadTrack = async (physicsWorld) => {
-// //     const model = await loadTrackModel();
-// //     const track = model.children[0].children[7];
-// //     const textureLoader = new THREE.TextureLoader();
-// //     const trackTexture = textureLoader.load('../../Models/level2/level2-models/gravel.jpeg');
-// //     const trackMaterial = new THREE.MeshStandardMaterial({ map: trackTexture });
-// //     track.scale.set(2, 2, 2);
-// //     track.material[4] = trackMaterial;
-// //     track.material[5].emissive = 0xffffff;
-// //     const t = model.children[0].children[7];
-// //     physicsWorld.setPositions(t.geometry.attributes.position.array);
-// //     return track;
-// // }
-
-// const loadTrack = async (physicsWorld) => {
-//     const model = await loadTrackModel();
-//     console.log(model); // Inspect the model structure
-
-//     // Check if the children exist and have enough elements
-//     if (model.children.length > 0 && model.children[0].children.length > 7) {
-//         const track = model.children[0].children[7];
-
-//         const textureLoader = new THREE.TextureLoader();
-//         const trackTexture = textureLoader.load('../../Models/level2/level2-models/gravel.jpeg');
-//         const trackMaterial = new THREE.MeshStandardMaterial({ map: trackTexture });
-
-//         track.scale.set(2, 2, 2);
-//         track.material[4] = trackMaterial;
-//         track.material[5].emissive = 0xffffff;
-
-//         physicsWorld.setPositions(track.geometry.attributes.position.array);
-//         return track;
-//     } else {
-//         console.error("Track model structure is not as expected.");
-//         return null; // or handle the error accordingly
-//     }
-// };
-
-
-// const loadCarModel = async (scene) => {
-//     //Models/level2/level2-models/car-models/mazda/mazda_rx7_stylised.glb
-//     return new Promise((resolve, reject) => {
-//         const loader = new GLTFLoader();
-//         loader.load('../../Models/level2/level2-models/car-models/mazda/mazda_rx7_stylised.glb', (gltf) => {
-//             const car = gltf.scene;
-//             car.scale.set(0.0030, 0.0030, 0.0030);  // Scale car
-//             car.position.set(1000, 1000, 1000);  // Position car
-//             car.rotateX(-90);  // Rotate car
-//             car.traverse((child) => {
-//                 if (child.isMesh) {
-//                     child.material = new THREE.MeshStandardMaterial({ color: 0x000000 });
-//                 }
-//             });
-//             resolve(car);
-//         }, undefined, (error) => reject(error));
-//     });
-// };
-
-// const addSkybox = (scene) => {
-//     const loader = new THREE.CubeTextureLoader();
-//     const texture = loader.load([
-//         '../../Models/level2/sky/posx.jpg', // Right Models/level2/sky/night.jpeg
-//         '../../Models/level2/sky/negx.jpg', // Left
-//         '../../Models/level2/sky/posy.jpg', // Top
-//         '../../Models/level2/sky/negy.jpg', // Bottom
-//         '../../Models/level2/sky/posz.jpg', // Front
-//         '../../Models/level2/sky/negz.jpg', // Back ../../Models/level2/sky/night
-//     ]);
-
-//     scene.background = texture; // Set the skybox as the scene background
-// };
-
-// const loadModels = async (scene, physicsWorld) => {
-//     const plane = buildPlane();
-//     const car = await loadCarModel(scene);
-//     const track = await loadTrack(physicsWorld);
-//     physicsWorld.createWorld();
-//     const houses = [];
-//     await loadHouses(houses);
-//     const finish = finishPlane();
-//     return { plane, car, track, houses, finish };
-// }
-
-
-// const create3DEnvironment = async () => {
-//     const camera = new Camera(75, window.innerWidth / window.innerHeight, 0.1, 100);
-//     const renderer = new Renderer();
-//     const scene = new THREE.Scene();
-//     const controls = new OrbitControls(camera.camera, renderer.domElement);
-//     const physicsWorld = new Physics();
-//     const physicsCar = new Vehicle();
-//     const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
-//     const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
-//     const vehicle = physicsCar.vehicle;
-//     const game = new Game(100, vehicle);
-//     const { plane, car, track, houses, finish } = await loadModels(scene, physicsWorld);
-
-
-//     physicsCar.createVehicle();
-//     vehicle.addToWorld(physicsWorld.physicsWorld);
-//     directionalLight.position.set(10, 10, 10);
-//     camera.setPosition(0, 10, 0);
-//     renderer.setUpRenderer();
-
-    
-//     scene.add(finish);
-//     scene.add(plane);
-//     scene.add(track);
-//     scene.add(car);
-//     scene.add(ambientLight);
-//     scene.add(directionalLight);
-//     addSkybox(scene);
-//     houses.forEach(house => scene.add(house));
-
-
-//     game.startTime();
-
-//     const animate = () => {
-//         const boundingBox = new THREE.Box3().setFromObject(car.children[0].children[0].children[0].children[0].children[0].children[0]);
-//         const finishBox = new THREE.Box3().setFromObject(finish);
-
-
-//         window.requestAnimationFrame(animate);
-//         physicsWorld.physicsWorld.fixedStep();
-//         game.checkState();
-//         controls.update();
-//         car.position.copy(vehicle.chassisBody.position);
-//         car.quaternion.copy(vehicle.chassisBody.quaternion);
-//         camera.smoothCameraFollow(car);
-//         renderer.renderer.render(scene, camera.camera);
-
-
-//         if(boundingBox.intersectsBox(finishBox)){
-//             game.state = "stopped";
-//         }
-//     };
-//     animate();
-// };
-
-
-// create3DEnvironment();
-
 import * as THREE from 'three';
-import { Camera } from '../camera';
-import { Renderer } from '../renderer';
-import { Game } from './game';
-import { Physics, Vehicle } from '../physics';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader.js';
+import * as CANNON from 'cannon-es';
+import CannonDebugger from 'cannon-es-debugger';
+import { texture } from 'three/webgpu';
+import { Reflector } from 'three/examples/jsm/objects/Reflector.js';
 
-const loader = new FBXLoader();
-const loader1 = new GLTFLoader();
 
-const audioLoader = new THREE.AudioLoader();
-const listener = new THREE.AudioListener();
-let engineSound, collisionSound, finishSound;
+class Time {
+    constructor(time) {
+        this.time = time;
+        this.state = "start";
+        this.count = 3;
+        this.countdownInterval = null;
+        this.timerInterval = null;
+    }
 
-// Add grass plane function
-const buildGrassPlane = () => {
-    const grassWidth = 512; // Larger than the road
-    const grassLength = 512;
-    const geometry = new THREE.PlaneGeometry(grassWidth, grassLength);
-    const textureLoader = new THREE.TextureLoader();
-    const grassTexture = textureLoader.load('../../Models/level2/level2-models/grass.jpeg');
-    grassTexture.wrapS = THREE.RepeatWrapping;
-    grassTexture.wrapT = THREE.RepeatWrapping;
-    grassTexture.repeat.set(50, 50);
-    
-    const material = new THREE.MeshStandardMaterial({ 
-        map: grassTexture,
-        roughness: 0.8,
-        metalness: 0.2
-    });
-    const plane = new THREE.Mesh(geometry, material);
-    plane.rotation.x = -Math.PI / 2;
-    plane.position.y = 0.005; 
-    return plane;
+    // Method to stop the timer and show the game-over screen if time runs out
+    stopTime() {
+        if (this.time === 0 && this.state === "running") {
+            clearInterval(this.timerInterval); // Stop the timer
+            this.state = "stopped"; // Update the state
+            window.location.href = 'lostScreen1.html'; // Redirect to lost screen
+        }
+        else if(this.time != 0 && this.state === "stopped"){
+            clearInterval(this.countdownInterval);
+            window.location.href = '../../html/winScreen1.html';
+        }
+    }
+    // Method to start the main timer after the countdown finishes
+    runTime() {
+        this.state = "running"; // Update state to running
+        this.timerInterval = setInterval(() => {
+            this.time -= 1; // Decrease time
+            document.getElementById('stopwatch').innerText = this.time; // Update stopwatch display
+            this.stopTime(); // Check if time should stop
+        }, 1000); // Update every second
+    }
+
+    // Method to handle the countdown from 3
+    startTime() {
+        this.countdownInterval = setInterval(() => {
+            this.count -= 1; // Decrease countdown
+            console.log(this.count);
+            document.getElementById('countdown').innerText = this.count; // Update countdown display
+
+            if (this.count === 0) {
+                clearInterval(this.countdownInterval); // Stop the countdown
+                document.getElementById('countdown').innerText = ''; // Clear the countdown display
+                this.runTime(); // Start the main timer
+            }
+        }, 1000); // Update every second
+    }
+}
+
+// GAME PARAMETERS
+const maxSteerVal = Math.PI / 8;
+const maxForce = 10;
+const frictionCoefficient = 0.05;
+const thirdPersonView = {
+    fieldOfView: 75,
+    aspect: window.innerWidth / window.innerHeight,
+    nearPlane: 0.1,
+    farPlane: 100,
 };
 
+// INPUT CONTROLS
+const enableInputControls = (vehicle) => {
+    window.addEventListener('keydown', (event) => {
+        switch (event.key) {
+            case 'ArrowUp':
+            case 'w':
+                vehicle.setWheelForce(maxForce, 0);
+                vehicle.setWheelForce(maxForce, 1);
+                break;
+            case 'ArrowDown':
+            case 's':
+                vehicle.setWheelForce(-maxForce / 2, 0);
+                vehicle.setWheelForce(-maxForce / 2, 1);
+                break;
+            case 'ArrowLeft':
+            case 'a':
+                vehicle.setSteeringValue(maxSteerVal, 0);
+                vehicle.setSteeringValue(maxSteerVal, 1);
+                break;
+            case 'ArrowRight':
+            case 'd':
+                vehicle.setSteeringValue(-maxSteerVal, 0);
+                vehicle.setSteeringValue(-maxSteerVal, 1);
+                break;
+        }
+    });
+    
+    window.addEventListener('keyup', (event) => {
+        switch (event.key) {
+            case 'w':
+            case 'ArrowUp':
+                vehicle.setWheelForce(0, 0);
+                vehicle.setWheelForce(0, 1);
+                break;
+            case 's':
+            case 'ArrowDown':
+                vehicle.setWheelForce(0, 0);
+                vehicle.setWheelForce(0, 1);
+                break;
+            case 'a':
+            case 'ArrowLeft':
+                vehicle.setSteeringValue(0, 0);
+                vehicle.setSteeringValue(0, 1);
+                break;
+            case 'd':
+            case 'ArrowRight':
+                vehicle.setSteeringValue(0, 0);
+                vehicle.setSteeringValue(0, 1);
+                break;
+        }
+    });
+};
+
+const disableInputControls = (vehicle) => {
+    window.addEventListener('keydown', (event) => {
+        switch (event.key) {
+            case 'ArrowUp':
+            case 'w':
+                vehicle.setWheelForce(0, 0);
+                vehicle.setWheelForce(0, 1);
+                break;
+            case 'ArrowDown':
+            case 's':
+                vehicle.setWheelForce(0, 0);
+                vehicle.setWheelForce(0, 1);
+                break;
+            case 'ArrowLeft':
+            case 'a':
+                vehicle.setSteeringValue(0, 0);
+                vehicle.setSteeringValue(0, 1);
+                break;
+            case 'ArrowRight':
+            case 'd':
+                vehicle.setSteeringValue(0, 0);
+                vehicle.setSteeringValue(0, 1);
+                break;
+        }
+    });
+    
+    window.addEventListener('keyup', (event) => {
+        switch (event.key) {
+            case 'w':
+            case 'ArrowUp':
+                vehicle.setWheelForce(0, 0);
+                vehicle.setWheelForce(0, 1);
+                break;
+            case 's':
+            case 'ArrowDown':
+                vehicle.setWheelForce(0, 0);
+                vehicle.setWheelForce(0, 1);
+                break;
+            case 'a':
+            case 'ArrowLeft':
+                vehicle.setSteeringValue(0, 0);
+                vehicle.setSteeringValue(0, 1);
+                break;
+            case 'd':
+            case 'ArrowRight':
+                vehicle.setSteeringValue(0, 0);
+                vehicle.setSteeringValue(0, 1);
+                break;
+        }
+    });
+};
+// PHYSICS WORLD
+const physicsWorld = new CANNON.World({
+    gravity: new CANNON.Vec3(0, -9.82, 0),
+});
+
+const groundBody = new CANNON.Body({
+    type: CANNON.Body.STATIC,
+    shape: new CANNON.Plane(),
+});
+groundBody.quaternion.setFromEuler(-Math.PI / 2, 0, 0);
+physicsWorld.addBody(groundBody);
+
+// WHEEL CREATION FUNCTION (Refactored)
+const addWheel = (vehicle, position, axisWidth) => {
+    const wheelBody = new CANNON.Body({
+        mass: 2,
+        material: new CANNON.Material('wheel'),
+    });
+    wheelBody.addShape(new CANNON.Sphere(0.1));
+    wheelBody.angularDamping = 0.4;
+    vehicle.addWheel({
+        body: wheelBody,
+        position: new CANNON.Vec3(position.x, 0, position.z * axisWidth),
+        axis: new CANNON.Vec3(0, 0, 1),
+        direction: new CANNON.Vec3(0, -1, 0),
+    });
+    return wheelBody;
+};
+
+const physicsCar = () => {
+    const carBody = new CANNON.Body({
+        mass: 20,
+        shape: new CANNON.Box(new CANNON.Vec3(1, 0.05, 0.5)),
+        position: new CANNON.Vec3(40, 0.1, 27.25),
+    });
+
+    const vehicle = new CANNON.RigidVehicle({
+        chassisBody: carBody,
+    });
+
+    const axisWidth = 0.5;
+    const wheelBody1 = addWheel(vehicle, { x: -1, z: 1 }, axisWidth);
+    const wheelBody2 = addWheel(vehicle, { x: -1, z: -1 }, axisWidth);
+    const wheelBody3 = addWheel(vehicle, { x: 1, z: -1 }, axisWidth);
+    const wheelBody4 = addWheel(vehicle, { x: 1, z: 1 }, axisWidth);
+
+    return { vehicle, wheelBody1, wheelBody2, wheelBody3, wheelBody4 };
+};
+
+const { vehicle, wheelBody1, wheelBody2, wheelBody3, wheelBody4 } = physicsCar();
+vehicle.addToWorld(physicsWorld);
+
+const boundaries = (positions) => {
+    const mass = 1000;
+    const body = new CANNON.Body({ mass });
+    const s = 2;
+
+    for(let i = 9171; i < 18133; i += 3){
+        const sphereShape = new CANNON.Sphere(0.25);
+        body.addShape(sphereShape, new CANNON.Vec3(positions[i]*s, positions[i+1]*s, positions[i+2]*s));
+    }
+    for(let i = 63117; i < 72115; i += 3){
+        const sphereShape = new CANNON.Sphere(0.25);
+        body.addShape(sphereShape, new CANNON.Vec3(positions[i]*s, positions[i+1]*s, positions[i+2]*s));
+    }
+
+    body.position.set(0, 0.5, 0)
+    physicsWorld.addBody(body)
+}
+
+// OBSTACLE CREATION FUNCTION WHICH YOU MUST AVOID 
+const createObstacles = (scene, physicsWorld) => {
+  const obstacles = [];
+  //const obstacleMaterial = new THREE.MeshStandardMaterial({ color: 0xff0000 }); // Red color for obstacles
+  const textureW = new THREE.TextureLoader().load("../../images/obstacle.png");
+  const obstacleMaterial= new THREE.MeshBasicMaterial({ map: textureW });
+
+  const positions = [
+    { x: 27, y: 0.5, z: 26 }, // 1st
+    { x: 10, y: 0.5, z: 15 },
+    { x: 1, y: 0.5, z: 25 },
+    { x: -35, y: 0.5, z: 15 }, //4th
+    { x: -60, y: 0.5, z: -8 },
+    { x: -5, y: 0.5, z: -8 },
+    { x: 20, y: 0.5, z: -26 },
+    { x: 92, y: 0.5, z: -25 },
+
+  ];
+
+  positions.forEach((pos) => {
+    // Create the visual representation
+    const geometry = new THREE.BoxGeometry(1, 1, 1); // Adjust size as needed
+   
+    const mesh = new THREE.Mesh(geometry, obstacleMaterial);
+    mesh.position.set(pos.x, pos.y, pos.z);
+    scene.add(mesh);
+
+    // Create the physical body
+    const body = new CANNON.Body({
+      mass: 1, // Set to 0 for static obstacles
+      position: new CANNON.Vec3(pos.x, pos.y, pos.z),
+      shape: new CANNON.Box(new CANNON.Vec3(0.5, 0.5, 0.5)), // Size must match the geometry
+    });
+    physicsWorld.addBody(body);
+
+    obstacles.push({ mesh, body });
+  });
+
+  return obstacles;
+};
+
+const updateObstacles = (obstacles) => {
+  obstacles.forEach((obstacle) => {
+    obstacle.mesh.position.copy(obstacle.body.position);
+    obstacle.mesh.quaternion.copy(obstacle.body.quaternion);
+  });
+};
+
+
+const createObstacles1 = (scene, physicsWorld) => {
+  const obstacles1 = [];
+  //const obstacleMaterial = new THREE.MeshStandardMaterial({ color: 0xff0000 }); // Red color for obstacles
+  const texture1 = new THREE.TextureLoader().load("../../images/steel.png");
+  const obstacleMaterial1= new THREE.MeshBasicMaterial({ map: texture1,metalness:0.8,roughness:0.2  });
+
+  const positions1 = [
+    { x: -25, y: 0.5, z: 22 },
+    { x: -10, y: 0.5, z: 30 }, //2nd
+    { x: -55, y: 0.5, z: 14 },
+    { x: -25, y: 0.5, z: -8 },
+    { x: 5, y: 0.5, z: -22 },
+    { x: 65, y: 0.5, z: -25 },
+    { x: 72, y: 0.5, z: 2 },
+    
+  ];
+
+  positions1.forEach((pos) => {
+    // Create the visual representation
+    const geometry1 = new THREE.BoxGeometry(1, 1, 1); // Adjust size as needed
+   
+    const mesh1 = new THREE.Mesh(geometry1, obstacleMaterial1);
+    mesh1.position.set(pos.x, pos.y, pos.z);
+    scene.add(mesh1);
+
+    // Create the physical body
+    const body1 = new CANNON.Body({
+      mass: 0, // Set to 0 for static obstacles
+      position: new CANNON.Vec3(pos.x, pos.y, pos.z),
+      shape: new CANNON.Box(new CANNON.Vec3(0.5, 0.5, 0.5)), // Size must match the geometry
+    });
+    physicsWorld.addBody(body1);
+
+    obstacles1.push({ mesh1, body1 });
+  });
+
+  return obstacles1;
+};
+
+const updateObstacles1 = (obstacles1) => {
+  obstacles1.forEach((obstacle1) => {
+    obstacle1.mesh1.position.copy(obstacle1.body1.position);
+    obstacle1.mesh1.quaternion.copy(obstacle1.body1.quaternion);
+  });
+};
+
+// CAMERA FOLLOW LOGIC (Chase View)
+const cameraOffset = new THREE.Vector3(-3, 2, 0); // Position to the side of the car
+const smoothFactor = 0.2; // Factor for smooth camera follow
+const fixedCameraY = 2; // Fixed height for the camera
+
+// G A M E   W O R L D
 
 const buildPlane = () => {
     const roadWidth = 256;
@@ -317,181 +363,32 @@ const finishPlane = () => {
     return plane;
 };
 
-const loadHouseModel = async (path, scale, position) => {
-    return new Promise((resolve, reject) => {
-        const loader = new GLTFLoader();
-        loader.load(path, (gltf) => {
-            const house = gltf.scene;
-            house.scale.set(...scale);
-            house.position.set(...position);
-            resolve(house);
-        }, undefined, (error) => reject(error));
-    });
-};
+const loader = new FBXLoader();
 
-const createHouse = async (modelPath, scale, position, rotation = { x: 0, y: 0, z: 0 }) => {
-    const house = await loadHouseModel(modelPath, scale, position);
-    house.rotation.set(rotation.x, rotation.y, rotation.z);
-    return house;
-};
-
-// Modified loadHouses with better positioning and added obstacles
-const loadHouses = async (houses) => {
-    // Additional condo positions
-    const condoPositions = [
-        [-75, 0.1, -30], [-75, 0.1, -35], [-75, 0.1, -40], [-75, 0.1, -45],
-        [-75, 0.1, -50], [-75, 0.1, -55], [-75, 0.1, -60], [-80, 0.1, -40],
-        [-96, 0.1, -60], [-105, 0.1, -60], [65, 0.1, -60], [55, 0.1, -60],
-        [65, 0.1, -60], [75, 0.1, -60], [85, 0.1, -60],
-        [-75, 0.1, -20], [-65, 0.1, -20], [-55, 0.1, -20],
-        [-45, 0.1, -20], [-35, 0.1, -20], [-25, 0.1, -20],
-        [25, 0.1, -30], [35, 0.1, -35], [45, 0.1, -35]
-    ];
-
-    for (const position of condoPositions) {
-        houses.push(await createHouse('../../Models/level2/level2-models/tree_gn.glb', [0.2, 0.2, 0.2], position));
-    }
-
-    const positions1 = [[-10, 0.1, 25],[-20, 0.1, 25],[0, 0.1, 15],[15, 0.1, 10],[20, 0.1, 15],[25, 0.1, 18],[30, 0.1, 15],[35, 0.1, 22],[40, 0.1, 22],[45, 0.1, 22],[50, 0.1, 21], [55, 0.1, 20], [60, 0.1, 19] ,[65, 0.1, 15]];
-    positions1.forEach( async (position) => {
-        houses.push(await createHouse('../../Models/level2/level2-models/old_tree.glb', [0.6, 0.6, 0.6], position));
-    })
-
-   
-    const positions = [[-10, 0.1, 25],[-20, 0.1, 25],[0, 0.1, 15],[15, 0.1, 10],[20, 0.1, 15],
-                      [25, 0.1, 18],[30, 0.1, 15],[35, 0.1, 22],[40, 0.1, 22],[45, 0.1, 22],
-                      [50, 0.1, 21], [55, 0.1, 20], [60, 0.1, 19] ,[65, 0.1, 15]];
-    
-    positions.forEach(async (position) => {
-        houses.push(await createHouse('../../Models/level2/level2-models/boy.glb', [0.6, 0.6, 0.6], position));
-    });
-
-    const positionsB = [[-30, 0.1, 30],[-35, 0.1, 25],[15, 0.1, 30],[20, 0.1, 33],[25, 0.1, 33],[30, 0.1, 33],[35, 0.1, 33],[40, 0.1, 33],[45, 0.1, 33],[50, 0.1, 33],[55, 0.1, 33],[60, 0.1, 33],[65, 0.1, 33]];
-
-    positionsB.forEach( async (position) => {
-        houses.push(await createHouse('../../Models/level2/level2-models/condo.glb', [0.2, 0.2, 0.2], position, {x: -3, y: Math.PI, z: 0 }));
-    })
-
-    // More obstacles on the track
-    const obstaclePositions = [
-        [10, 0.1, 15], [-10, 0.1, 25], [15, 0.1, 5], [20, 0.1, -10], 
-        [30, 0.1, 35], [35, 0.1, 20], [40, 0.1, -5],
-        [-20, 0.1, 10], [-25, 0.1, -20], [-15, 0.1, -30], [12, 0.1, -35], 
-        [18, 0.1, 40], [-28, 0.1, 27], [25, 0.1, -40], [16, 0.1, -5],
-        [-17, 0.1, 17], [23, 0.1, -15], [31, 0.1, 13], [-34, 0.1, -29], 
-        [29, 0.1, -24], [-32, 0.1, -12], [37, 0.1, -8], [15, 0.1, 45], 
-        [-19, 0.1, -37], [27, 0.1, -32], [-3, 0.1, 33], [5, 0.1, -28]
-    ];
-    
-
-    obstaclePositions.forEach(async (position) => {
-        const obstacle = await createHouse('../../Models/level2/level2-models/obstacle.glb', 
-                                         [1, 1, 1], 
-                                         position, 
-                                         {x: 0, y: Math.random() * Math.PI * 2, z: 0});
-        obstacle.userData.isObstacle = true; 
-        houses.push(obstacle);
-    });
-
-    // Add more people
-    const peoplePositions = [
-        [10, 0.1, 10], [15, 0.1, 20], [-5, 0.1, 15], [20, 0.1, 30], 
-        [25, 0.1, 35], [30, 0.1, 25], [35, 0.1, 15]
-    ];
-
-    peoplePositions.forEach(async (position) => {
-        houses.push(await createHouse('../../Models/level2/level2-models/old_tree.glb', [0.6, 0.6, 0.6], position));
-    });
-
-    // Restore trees
-    const treePositions = [
-        [-10, 0.1, 50], [50, 0.1, 15], [10, 0.1, -20], [15, 0.1, -25]
-    ];
-
-    treePositions.forEach(async (position) => {
-        houses.push(await createHouse('../../Models/level2/level2-models/tree_gn.glb', [0.4, 0.4, 0.4], position));
-    });
-
-    // Additional decorative elements
-    houses.push(await createHouse('../../Models/level2/level2-models/boy.glb', [0.015, 0.015, 0.015], [10, 0.1, 11]));
-    houses.push(await createHouse('../../Models/level2/level2-models/tree_gn.glb', [0.5, 0.5, 0.5], [50, 0.1, -10], {x: 0, y: Math.PI / 2, z: 0}));
-    houses.push(await createHouse('../../Models/level2/level2-models/playground.glb', [1.5, 1.5, 1.5], [85, 0.1, -30], {x: 0, y: Math.PI / 2, z: 0}));
-};
-const loadTrackModel = () => {
+const loadTrack = () => {
     return new Promise((resolve, reject) => {
         loader.load(
-            '../../Models/level2/level2-models/track-models/formula_track/Formula_Track copy.fbx',
-            (fbx) => {
-                console.log(fbx);
-                resolve(fbx);
-            },
+            '../../Models/Formula_Track.fbx',
+            (fbx) => resolve(fbx),
             (xhr) => console.log(`${(xhr.loaded / xhr.total * 100)}% loaded`),
             (error) => reject(error)
         );
     });
-};
 
-const loadSounds = () => {
-    return new Promise((resolve, reject) => {
-        engineSound = new THREE.Audio(listener);
-        collisionSound = new THREE.Audio(listener);
-        finishSound = new THREE.Audio(listener);
-
-        // Load engine sound
-        audioLoader.load('../../sounds/engine_start.mp3', (buffer) => {
-            engineSound.setBuffer(buffer);
-            engineSound.setLoop(false);
-            engineSound.setVolume(0.5);
-        });
-
-        // Load collision sound
-        audioLoader.load('../../sounds/collision.mp3', (buffer) => {
-            collisionSound.setBuffer(buffer);
-            collisionSound.setVolume(0.7);
-        });
-
-        // Load finish sound
-        audioLoader.load('../../sounds/finish.mp3', (buffer) => {
-            finishSound.setBuffer(buffer);
-            finishSound.setVolume(1.0);
-            resolve();
-        });
-    });
-};
-
-const loadTrack = async (physicsWorld) => {
-    const model = await loadTrackModel();
-    console.log(model);
-
-    if (model.children.length > 0 && model.children[0].children.length > 7) {
-        const track = model.children[0].children[7];
-        const textureLoader = new THREE.TextureLoader();
-        const trackTexture = textureLoader.load('../../Models/level2/level2-models/gravel.jpeg');
-        const trackMaterial = new THREE.MeshStandardMaterial({ map: trackTexture });
-
-        track.scale.set(2, 2, 2);
-        track.material[4] = trackMaterial;
-        track.material[5].emissive = 0xffffff;
-
-        physicsWorld.setPositions(track.geometry.attributes.position.array);
-        return track;
-    } else {
-        console.error("Track model structure is not as expected.");
-        return null;
-    }
 };
 
 const loadCarModel = async (scene) => {
     return new Promise((resolve, reject) => {
         const loader = new GLTFLoader();
-        loader.load('../../Models/level2/level2-models/car-models/mazda/mazda_rx7_stylised.glb', (gltf) => {
+        loader.load('../../Models/mazda_rx7_stylised.glb', (gltf) => {
             const car = gltf.scene;
-            car.scale.set(0.0040, 0.0040, 0.0040);
-            car.position.set(1000, 1000, 1000);
-            car.rotateX(-90);
+            car.scale.set(0.0030, 0.0030, 0.0030);  // Scale car
+            car.position.set(1000, 1000, 1000);  // Position car
+            car.rotateX(-90);  // Rotate car
             car.traverse((child) => {
                 if (child.isMesh) {
                     child.material = new THREE.MeshStandardMaterial({ color: 0x000000 });
+                    child.castShadow=true;
                 }
             });
             resolve(car);
@@ -499,148 +396,313 @@ const loadCarModel = async (scene) => {
     });
 };
 
-const addSkybox = (scene) => {
+const loadSkybox = (scene) => {
     const loader = new THREE.CubeTextureLoader();
     const texture = loader.load([
-        '../../Models/level2/sky/posx.jpg',
-        '../../Models/level2/sky/negx.jpg',
-        '../../Models/level2/sky/posy.jpg',
-        '../../Models/level2/sky/negy.jpg',
-        '../../Models/level2/sky/posz.jpg',
-        '../../Models/level2/sky/negz.jpg',
+        '../../skybox/px.png', // Right
+        '../../skybox/nx.png', // Left
+        '../../skybox/py.png', // Top
+        '../../skybox/ny.png', // Bottom
+        '../../skybox/pz.png', // Front
+        '../../skybox/nz.png', // Back
     ]);
-    scene.background = texture;
+
+    scene.background = texture; // Set the skybox as the scene background
 };
 
-const loadModels = async (scene, physicsWorld) => {
-    const plane = buildPlane();
-    const car = await loadCarModel(scene);
-    const track = await loadTrack(physicsWorld);
-    physicsWorld.createWorld();
-    const houses = [];
-    await loadHouses(houses);
-    const finish = finishPlane();
-    const grass = buildGrassPlane(); 
-    return { plane, car, track, houses, finish, grass };
+let isFirstPerson = false; // Start with 3rd person by default
+
+// CAMERA OFFSET FOR BOTH VIEWS
+const thirdPersonOffset = new THREE.Vector3(-3, 2, 0); // Third-person view (chase view)
+const firstPersonOffset = new THREE.Vector3(1, 1, 0); // First-person view (inside car)
+
+// SMOOTH CAMERA FOLLOW FUNCTION (Updated to support both views)
+const smoothCameraFollow = (camera, car) => {
+    if (isFirstPerson) {
+        // 1st person view: Position camera inside the car
+        const targetPosition = car.position.clone().add(firstPersonOffset);
+        camera.position.lerp(targetPosition, smoothFactor);
+    } else {
+        // 3rd person view: Chase view logic
+        const carDirection = new THREE.Vector3();
+        car.getWorldDirection(carDirection); // Get the car's forward direction
+        const carRight = new THREE.Vector3().crossVectors(carDirection, new THREE.Vector3(0, 1, 0)).normalize(); // Get the right direction of the car
+        
+        const targetPosition = car.position
+            .clone()
+            .add(carRight.clone().multiplyScalar(thirdPersonOffset.x)) // Move to the side
+            .setY(fixedCameraY); // Set a fixed height for the camera
+
+        camera.position.lerp(targetPosition, smoothFactor);
+    }
+
+    // Always make the camera look at the car
+    camera.lookAt(car.position);
 };
 
+// TOGGLE CAMERA VIEW ON 'P' KEY PRESS
+window.addEventListener('keydown', (event) => {
+    if (event.key === 'p' || event.key === 'P') {
+        isFirstPerson = !isFirstPerson; // Toggle between 1st and 3rd person
+    }
+});
+
+// Function to load a house model
+const loadHouseModel = async (path, scale, position) => {
+    return new Promise((resolve, reject) => {
+        const loader = new GLTFLoader();
+        loader.load(path, (gltf) => {
+            const house = gltf.scene;
+            house.scale.set(...scale); // Set scale using spread operator
+            house.position.set(...position); // Set position using spread operator
+            resolve(house);
+        }, undefined, (error) => reject(error));
+    });
+};
+
+const createHouse = async (modelPath, scale, position, rotation = { x: 0, y: 0, z: 0 }) => {
+    const house = await loadHouseModel(modelPath, scale, position);
+    house.rotation.set(rotation.x, rotation.y, rotation.z); // Apply rotation
+    return house;
+};
+// CREATE ENVIRONMENT
 const create3DEnvironment = async () => {
-    const camera = new Camera(75, window.innerWidth / window.innerHeight, 0.1, 100);
-    const renderer = new Renderer();
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.shadowMap.enabled = true; // Enable shadow mapping
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap; // Set shadow map type
+    document.body.appendChild(renderer.domElement);
+
+    const camera = new THREE.PerspectiveCamera(
+        thirdPersonView.fieldOfView,
+        thirdPersonView.aspect,
+        thirdPersonView.nearPlane,
+        thirdPersonView.farPlane
+    );
+    camera.position.set(0, 10, 0);
+
+    const controls = new OrbitControls(camera, renderer.domElement);
     const scene = new THREE.Scene();
-    const controls = new OrbitControls(camera.camera, renderer.domElement);
-    const physicsWorld = new Physics();
-    const physicsCar = new Vehicle();
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
-    const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
-    const vehicle = physicsCar.vehicle;
-    const game = new Game(200, vehicle);
-    const { plane, car, track, houses, finish, grass } = await loadModels(scene, physicsWorld);
-    camera.camera.add(listener);
 
+    loadSkybox(scene);
 
+    const plane = buildPlane();
+    const model = await loadTrack();
+    const car = await loadCarModel(scene);
     
+ 
+    const createMirror = (scene) => {
+    const mirrorOptions={
+    clipBias:0.003,
+    textureWidth:window.innerWidth*window.devicePixelRatio,
+    textureHeight:window.innerWidth*window.devicePixelRatio,
+    color:0x889999,
+    multisample:4,
 
-    physicsCar.createVehicle();
-    vehicle.addToWorld(physicsWorld.physicsWorld);
-    directionalLight.position.set(10, 10, 10);
-    camera.setPosition(0, 10, 0);
-    renderer.setUpRenderer();
+    };
 
-    scene.add(grass);  
+    const mirrorGeometry = new THREE.PlaneGeometry(5, 5);
+    const mirror =new Reflector(mirrorGeometry,mirrorOptions);
+    mirror.rotateX(Math.PI/1);
+    mirror.position.set(35, 0.005, 30 );
+    scene.add(mirror);
+  };
+    //const scene = new THREE.Scene();
+    createMirror(scene);
+
+    const track = model.children[0].children[7];
+    const textureLoader = new THREE.TextureLoader();
+    const trackTexture = textureLoader.load('../../Models/road.jpg');
+    const trackMaterial = new THREE.MeshStandardMaterial({ map: trackTexture });
+    track.scale.set(2, 2, 2);
+    track.material[4] = trackMaterial;
+    track.material[5].emissive = 0xffffff;
+    const t = model.children[0].children[7];
+    boundaries(t.geometry.attributes.position.array);
+    const finish = finishPlane();
+    finish.receiveShadow=true;
     scene.add(finish);
+
+    // Add the plane, track, car to the scene
     scene.add(plane);
     scene.add(track);
     scene.add(car);
+    // Add all houses to the scene
+    //houses.forEach(house => scene.add(house));
+
+    // L I G H T I N G
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+    ambientLight.position.set(1, 1, 1);
     scene.add(ambientLight);
+
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.7);
+    directionalLight.position.set(10, 200, 10);
+    directionalLight.target.position.set(0,0,0);
+    //directionalLight.castShadow = true;
     scene.add(directionalLight);
-    addSkybox(scene);
-    houses.forEach(house => scene.add(house));
+
+    const obstacles = createObstacles(scene, physicsWorld);
+    const obstacles1 = createObstacles1(scene, physicsWorld);
+    //const obstacles2 = createObstacles2(scene, physicsWorld);
+
+    //const cannonDebugger = new CannonDebugger(scene, physicsWorld);
+    const time = new Time(100000000000, vehicle);
+    time.startTime();
+
+  const waypoints = [
+    new THREE.Vector3(0, 0, 0),
+    new THREE.Vector3(10, 0, 0),
+    new THREE.Vector3(10, 0, 10),
+    new THREE.Vector3(0, 0, 10),
+    // Add more waypoints as needed
+];
 
 
-    await loadSounds();
-    game.startTime();
-    engineSound.play();
 
-    // Initial obstacle hit counter
-    let collisionCount = 0;
-    const maxCollisions = 1;
-    const obstacleCounterElement = document.getElementById('obstacleCounter');
+// Track the current waypoint index and completed laps
+let currentWaypointIndex = 0;
+let completedLaps = 0;
 
+// Function to check if the car is close to the next waypoint
+const checkWaypointProgress = (carPosition) => {
+    const currentWaypoint = waypoints[currentWaypointIndex];
+    const distance = carPosition.distanceTo(currentWaypoint);
 
+    if (distance < 1) { // If close enough to the waypoint
+        currentWaypointIndex++; // Move to the next waypoint
 
-// Animation function with obstacle collision check
-    const animate = () => {
-        const boundingBox = new THREE.Box3().setFromObject(car);
-        const finishBox = new THREE.Box3().setFromObject(finish);
-        const collisionCooldown = 100; // Time in milliseconds before allowing another collision count
-        let lastCollisionTime = 0; // Track the last collision time
-
-        // Check for obstacle collisions
-        houses.forEach(house => {
-            if (house.userData.isObstacle) {
-                const obstacleBox = new THREE.Box3().setFromObject(house);
-
-                // Check if the bounding box of the vehicle intersects with the obstacle box
-                if (boundingBox.intersectsBox(obstacleBox)) {
-                    const currentTime = Date.now();
-
-                    // Only count the collision if enough time has passed
-                    if (currentTime - lastCollisionTime > collisionCooldown) {
-                        collisionCount++;
-                        lastCollisionTime = currentTime; // Update the last collision time
-
-                        if (collisionSound.isPlaying) {
-                            collisionSound.stop();
-                        }
-                        collisionSound.play();
-
-                        // Update the obstacle counter display
-                        obstacleCounterElement.textContent = `Obstacles hit: ${collisionCount}/${maxCollisions}`;
-
-                        // End game if collisionCount reaches maxCollisions
-                        if (collisionCount >= maxCollisions) {
-                            engineSound.stop();
-                            game.state = "dead";
-                            window.location.href = 'hitObs.html';
-                            console.log("Game Over - Obstacle hit!");
-                            return; // Exit the function to handle game over
-                        }
-                    }
-                }
-            }
-        });
-
-        // Remaining animation and rendering logic
-        if (game.state === "dead") return; // Stop animation if game is over
-
-        // Check if the car intersects with the finish line
-        if (boundingBox.intersectsBox(finishBox)) {
-            engineSound.stop();
-            finishSound.play();
-            game.state = "stopped";
-            console.log("Finished the race!");
+        // If all waypoints are completed, reset to the start and increase lap count
+        if (currentWaypointIndex >= waypoints.length) {
+            currentWaypointIndex = 0; // Reset to first waypoint
+            completedLaps++; // Increase lap count
+            time.checkWinCondition(completedLaps); // Check for win condition
         }
+    }
+};
 
-        if (engineSound) {
-            const speed = vehicle.chassisBody.velocity.length();
-            engineSound.playbackRate = 0.5 + (speed * 0.1);
-        }
+// Inside your animate function, after updating the car's position:
+const animate = () => {
+    window.requestAnimationFrame(animate);
+    physicsWorld.fixedStep();
+    //cannonDebugger.update();
+    car.position.copy(vehicle.chassisBody.position);
+    car.quaternion.copy(vehicle.chassisBody.quaternion);
+    controls.update();
+    updateObstacles(obstacles); // Update obstacles
+    updateObstacles1(obstacles1); 
+   // updateObstacles2(obstacles2); 
 
-        // Continue the animation loop
-        window.requestAnimationFrame(animate);
-        physicsWorld.physicsWorld.fixedStep();
-        game.checkState();
-        controls.update();
-        car.position.copy(vehicle.chassisBody.position);
-        car.quaternion.copy(vehicle.chassisBody.quaternion);
-        camera.smoothCameraFollow(car);
-        renderer.renderer.render(scene, camera.camera);
-    };
+    // Check car's position against waypoints
+    checkWaypointProgress(car.position);
 
+    // Existing friction handling
+    if (!window.keyIsPressed) {
+        const velocity = vehicle.chassisBody.velocity;
+        velocity.x *= (1 - frictionCoefficient);
+        velocity.z *= (1 - frictionCoefficient);
+    }
+
+    // Enable or disable input controls based on time state
+    if (time.state === "running") {
+        enableInputControls(vehicle);
+    } else {
+        disableInputControls(vehicle);
+    }
+
+    const boundingBox = new THREE.Box3().setFromObject(car.children[0].children[0].children[0].children[0].children[0].children[0]);
+    const finishBox = new THREE.Box3().setFromObject(finish);
+    if(boundingBox.intersectsBox(finishBox)){
+        time.state = "stopped";
+    }
     
-    
-    // Start the animation loop
-    animate();
-}    
+
+    // Smooth camera follow the car
+    smoothCameraFollow(camera, car);
+
+    // Render the scene
+    renderer.render(scene, camera);
+};
+animate();
+};
+
+
+window.keyIsPressed = false;
+window.addEventListener('keydown', () => { window.keyIsPressed = true; });
+window.addEventListener('keyup', () => { window.keyIsPressed = false; });
+
 create3DEnvironment();
+
+
+  //  // Create an array to hold house models
+  //  const houses = [];
+    
+  //  // Load houses and add them to the array
+  //  //Tiny House
+
+  //  houses.push(await createHouse('../Models/tiny_house.glb', [0.6, 0.6, 0.6], [-10, 0.1, 25]));
+  //  houses.push(await createHouse('../Models/tiny_house.glb', [0.6, 0.6, 0.6], [-20, 0.1, 25]));
+  //  houses.push(await createHouse('../Models/tiny_house.glb', [0.6, 0.6, 0.6], [0, 0.1, 15]));
+  //  houses.push(await createHouse('../Models/tiny_house.glb', [0.6, 0.6, 0.6], [15, 0.1, 10]));
+  //  houses.push(await createHouse('../Models/tiny_house.glb', [0.6, 0.6, 0.6], [20, 0.1, 15]));
+  //  houses.push(await createHouse('../Models/tiny_house.glb', [0.6, 0.6, 0.6], [25, 0.1, 18]));
+  //  houses.push(await createHouse('../Models/tiny_house.glb', [0.6, 0.6, 0.6], [30, 0.1, 15]));
+  //  houses.push(await createHouse('../Models/tiny_house.glb', [0.6, 0.6, 0.6], [35, 0.1, 22]));
+  //  houses.push(await createHouse('../Models/tiny_house.glb', [0.6, 0.6, 0.6], [40, 0.1, 22]));
+  //  houses.push(await createHouse('../Models/tiny_house.glb', [0.6, 0.6, 0.6], [45, 0.1, 22]));
+  //  houses.push(await createHouse('../Models/tiny_house.glb', [0.6, 0.6, 0.6], [50, 0.1, 21]));
+  //  houses.push(await createHouse('../Models/tiny_house.glb', [0.6, 0.6, 0.6], [55, 0.1, 20]));
+  //  houses.push(await createHouse('../Models/tiny_house.glb', [0.6, 0.6, 0.6], [60, 0.1, 19]));
+  //  houses.push(await createHouse('../Models/tiny_house.glb', [0.6, 0.6, 0.6], [65, 0.1, 15]));
+
+  //  houses.push(await createHouse('../Models/tiny_house.glb', [0.6, 0.6, 0.6], [-30, 0.1, 30], {x: 0, y: Math.PI, z: 0 }));
+  //  houses.push(await createHouse('../Models/tiny_house.glb', [0.6, 0.6, 0.6], [-35, 0.1, 25], {x: 0, y: Math.PI, z: 0 }));
+  //  houses.push(await createHouse('../Models/tiny_house.glb', [0.6, 0.6, 0.6], [15, 0.1, 30], {x: 0, y: Math.PI, z: 0 }));
+  //  houses.push(await createHouse('../Models/tiny_house.glb', [0.6, 0.6, 0.6], [20, 0.1, 33], {x: 0, y: Math.PI, z: 0 }));
+  //  houses.push(await createHouse('../Models/tiny_house.glb', [0.6, 0.6, 0.6], [25, 0.1, 33], {x: 0, y: Math.PI, z: 0 }));
+  //  houses.push(await createHouse('../Models/tiny_house.glb', [0.6, 0.6, 0.6], [30, 0.1, 33], {x: 0, y: Math.PI, z: 0 }));
+  //  houses.push(await createHouse('../Models/tiny_house.glb', [0.6, 0.6, 0.6], [35, 0.1, 33], {x: 0, y: Math.PI, z: 0 }));
+  //  houses.push(await createHouse('../Models/tiny_house.glb', [0.6, 0.6, 0.6], [40, 0.1, 33], {x: 0, y: Math.PI, z: 0 }));
+  //  houses.push(await createHouse('../Models/tiny_house.glb', [0.6, 0.6, 0.6], [45, 0.1, 33], {x: 0, y: Math.PI, z: 0 }));
+  //  houses.push(await createHouse('../Models/tiny_house.glb', [0.6, 0.6, 0.6], [50, 0.1, 33], {x: 0, y: Math.PI, z: 0 }));
+  //  houses.push(await createHouse('../Models/tiny_house.glb', [0.6, 0.6, 0.6], [55, 0.1, 33], {x: 0, y: Math.PI, z: 0 }));
+  //  houses.push(await createHouse('../Models/tiny_house.glb', [0.6, 0.6, 0.6], [60, 0.1, 33], {x: 0, y: Math.PI, z: 0 }));
+  //  houses.push(await createHouse('../Models/tiny_house.glb', [0.6, 0.6, 0.6], [65, 0.1, 33], {x: 0, y: Math.PI, z: 0 }));
+
+
+  //  //Shanty House
+  //  houses.push(await createHouse('../Models/shanty.glb', [0.2, 0.2, 0.2], [-75, 0.1, -15], {x: 0, y: Math.PI / 2, z: 0 }));
+  //  houses.push(await createHouse('../Models/shanty.glb', [0.2, 0.2, 0.2], [-65, 0.1, -20], {x: 0, y: Math.PI / 2, z: 0 }));
+  //  houses.push(await createHouse('../Models/shanty.glb', [0.2, 0.2, 0.2], [-55, 0.1, -20], {x: 0, y: Math.PI / 2, z: 0 }));
+  //  houses.push(await createHouse('../Models/shanty.glb', [0.2, 0.2, 0.2], [-45, 0.1, -20], {x: 0, y: Math.PI / 2, z: 0 }));
+  //  houses.push(await createHouse('../Models/shanty.glb', [0.2, 0.2, 0.2], [-35, 0.1, -20], {x: 0, y: Math.PI / 2, z: 0 }));
+  //  houses.push(await createHouse('../Models/shanty.glb', [0.2, 0.2, 0.2], [-25, 0.1, -20], {x: 0, y: Math.PI / 2, z: 0 }));
+  //  houses.push(await createHouse('../Models/shanty.glb', [0.2, 0.2, 0.2], [-15, 0.1, -20], {x: 0, y: Math.PI / 2, z: 0 }));
+  //  houses.push(await createHouse('../Models/shanty.glb', [0.2, 0.2, 0.2], [-5, 0.1, -25], {x: 0, y: Math.PI / 2, z: 0 }));
+  //  houses.push(await createHouse('../Models/shanty.glb', [0.2, 0.2, 0.2], [5, 0.1, -34], {x: 0, y: Math.PI / 2, z: 0 }));
+  //  houses.push(await createHouse('../Models/shanty.glb', [0.2, 0.2, 0.2], [15, 0.1, -34], {x: 0, y: Math.PI / 2, z: 0 }));
+  //  houses.push(await createHouse('../Models/shanty.glb', [0.2, 0.2, 0.2], [25, 0.1, -34], {x: 0, y: Math.PI / 2, z: 0 }));
+  //  houses.push(await createHouse('../Models/shanty.glb', [0.2, 0.2, 0.2], [35, 0.1, -34], {x: 0, y: Math.PI / 2, z: 0 }));
+  //  houses.push(await createHouse('../Models/shanty.glb', [0.2, 0.2, 0.2], [45, 0.1, -34], {x: 0, y: Math.PI / 2, z: 0 }));
+  //  houses.push(await createHouse('../Models/shanty.glb', [0.2, 0.2, 0.2], [55, 0.1, -34], {x: 0, y: Math.PI / 2, z: 0 }));
+  //  houses.push(await createHouse('../Models/shanty.glb', [0.2, 0.2, 0.2], [65, 0.1, -34], {x: 0, y: Math.PI / 2, z: 0 }));
+
+  //  houses.push(await createHouse('../Models/shanty.glb', [0.2, 0.2, 0.2], [-55, 0.1, 0], {x: 0, y: -Math.PI / 2, z: 0 }));
+  //  houses.push(await createHouse('../Models/shanty.glb', [0.2, 0.2, 0.2], [-45, 0.1, 0], {x: 0, y: -Math.PI / 2, z: 0 }));
+  //  houses.push(await createHouse('../Models/shanty.glb', [0.2, 0.2, 0.2], [-35, 0.1, 0], {x: 0, y: -Math.PI / 2, z: 0 }));
+  //  houses.push(await createHouse('../Models/shanty.glb', [0.2, 0.2, 0.2], [-25, 0.1, 0], {x: 0, y: -Math.PI / 2, z: 0 }));
+  //  houses.push(await createHouse('../Models/shanty.glb', [0.2, 0.2, 0.2], [-15, 0.1, 0], {x: 0, y: -Math.PI / 2, z: 0 }));
+  //  houses.push(await createHouse('../Models/shanty.glb', [0.2, 0.2, 0.2], [-5, 0.1, 0], {x: 0, y: -Math.PI / 2, z: 0 }));
+  //  houses.push(await createHouse('../Models/shanty.glb', [0.2, 0.2, 0.2], [5, 0.1, -10], {x: 0, y: -Math.PI / 2, z: 0 }));
+  //  houses.push(await createHouse('../Models/shanty.glb', [0.2, 0.2, 0.2], [15, 0.1, -15], {x: 0, y: -Math.PI / 2, z: 0 }));
+  //  houses.push(await createHouse('../Models/shanty.glb', [0.2, 0.2, 0.2], [25, 0.1, -15], {x: 0, y: -Math.PI / 2, z: 0 }));
+
+  //  // Bar
+
+  //  houses.push(await createHouse('../Models/bar_shack.glb', [0.015, 0.015, 0.015], [10, 0.1, 11]));
+
+  //  houses.push(await createHouse('../Models/grass.glb', [2, 2, 2], [15, 0.1, 10]));
+  //  houses.push(await createHouse('../Models/grass.glb', [2, 2, 2], [15, 0.1, 20]));
+  //  houses.push(await createHouse('../Models/grass.glb', [2, 2, 2], [15, 0.1, 30]));
+
+  //  houses.push(await createHouse('../Models/soccer_field.glb', [0.5, 0.5, 0.5], [50, 0.1, -10], {x: 0, y: Math.PI / 2, z: 0}));
+  //  houses.push(await createHouse('../Models/playground.glb', [1.5, 1.5, 1.5], [85, 0.1, -30], {x: 0, y: Math.PI / 2, z: 0}));

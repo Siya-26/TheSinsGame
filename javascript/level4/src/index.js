@@ -4,7 +4,7 @@ import { FuelCan } from "./fuelcan";
 import { renderMap } from "./renderMap2";
 import { FlyControls } from "./Flycontrols";
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
-import Stand from "./stand";
+import Stand  from "./stand";
 import { FLine } from "./finishline";
 
 const scene = new THREE.Scene();
@@ -238,7 +238,7 @@ let camera_mode = false
 let totalPlayerAngle = [0, 0, 0]
 
 const Player_Object = new Object();
-Player_Object.health = 100;
+Player_Object.health = 1000;
 Player_Object.fuel = 100;
 Player_Object.score = 0;
 Player_Object.time = 0;
@@ -376,7 +376,7 @@ window.addEventListener("resize", () => {
 function getPlayerSpeed(value) {
 
 	if (value) {
-		if (accelerate) return speed * 2.5;
+		if (accelerate) return speed * 3;
 		if (decelerate) return -speed;
 
 		return 0;
@@ -391,11 +391,11 @@ function movePlayerCar(timeDelta) {
 
 
 	if (left) {
-		playerCar.rotation.z += 0.015
+		playerCar.rotation.z += 0.02
 	}
 
 	if (right) {
-		playerCar.rotation.z -= 0.015
+		playerCar.rotation.z -= 0.02
 	}
 
 	playerCar.position.x += Math.cos(playerCar.rotation.z) * playerSpeed * timeDelta
@@ -596,7 +596,7 @@ function hitDetection() {
 		if (carBox.intersectsBox(vehicleBox)) {
 			accelerate = false;
 			decelerate = false;
-			Player_Object.health -= 5;
+			Player_Object.health -= 0.5;
 			Enemy_Objects[i].health -= 10;
 			//  Reduce health when hit
 		}
@@ -609,7 +609,7 @@ function hitDetection() {
 			//////////////// Fuel Can Hit
 			scene.remove(fuelcans[i])
 			fuelcans.splice(i, 1);
-			Player_Object.fuel += 30;			//		Fuel can is 20 
+			Player_Object.fuel += 40;			//		Fuel can is 20 
 		}
 	}
 }
@@ -671,7 +671,7 @@ function updatevalues() {
 
 
 ////////////////////////// WIN CONDITON //////////////////////
-let laps = 2
+let laps = 1
 
 let p_laps = 0
 
@@ -682,11 +682,16 @@ let position = 1;
 function winconditioncheck() {
 	if (playerCar.position.x >= 0 && playerCar.position.x <= 2 && playerCar.position.y > 0) {
 		p_laps++;
+		console.log("Player Laps: " + p_laps);
 		if (p_laps === laps) {
 			//////////// WIN CONDITION ///////////////////////
-			const standings = document.getElementById("standings")
-			standings.innerText = "GAME OVER\nYour Position was " + position + " Out of 4 !";
-			Renderer.setAnimationLoop(null);
+			
+			const standings = document.getElementById("standings");
+			const message = document.getElementById("gameOverMessage");
+			message.innerText = "GAME OVER\nYour Position was " + position + " Out of 4!";
+			 standings.querySelector('.button-container').style.display = 'block';
+			standings.style.display = 'flex'; 
+			Renderer.setAnimationLoop(null)
 		}
 
 	}
