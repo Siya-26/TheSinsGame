@@ -333,6 +333,17 @@ const finishPlane = (x, y, z) => {
 
 const loader = new FBXLoader();
 
+const loadFlag = () => {
+  return new Promise((resolve, reject) => {
+    loader.load(
+      "../Models/Finish_Line.fbx",
+      (fbx) => resolve(fbx),
+      (xhr) => console.log(`${(xhr.loaded / xhr.total) * 100}% loaded`),
+      (error) => reject(error)
+    );
+  });
+};
+
 const loadTrack = () => {
   return new Promise((resolve, reject) => {
     loader.load(
@@ -478,6 +489,7 @@ const create3DEnvironment = async () => {
 
   const plane = buildPlane();
   const model = await loadTrack();
+  const flag = await loadFlag();
   const car = await loadCarModel(scene);
 
   const building = [];
@@ -838,30 +850,36 @@ const create3DEnvironment = async () => {
   );
 
   const track = model.children[0].children[7];
+  console.log("Model: ", flag);
   const textureLoader = new THREE.TextureLoader();
   const trackTexture = textureLoader.load("../Textures/gravel.png");
   const trackMaterial = new THREE.MeshStandardMaterial({
     map: trackTexture,
-    color: 0xffffff, // Ensures the texture stays white
+    color: 0xffffff,
     roughness: 0.8,
     metalness: 0.2,
   });
   track.scale.set(2, 2, 2);
+  flag.scale.set(0.3, 0.3, 0.3);
+  flag.position.set(45, 0.1, 26.6);
+  flag.rotateY(29.8);
+  flag.rotateY(-160.2);
   track.material[1].emissive = 0xb0b0b0;
   track.material[3] = trackMaterial;
   track.material[4] = trackMaterial;
   track.material[5].emissive = 0xb0b0b0;
   const t = model.children[0].children[7];
   boundaries(t.geometry.attributes.position.array);
-  const finish = finishPlane(45, 0.1, 27.25);
+  const finish = finishPlane(45, 0.1, 27.5);
 
   scene.add(finish);
   scene.add(plane);
   scene.add(track);
+  scene.add(flag);
 
-  car.castShadow = true; // This object will cast shadows
+  car.castShadow = true;
   scene.add(car);
-  // Add all building to the scene
+
   building.forEach((house) => {
     house.castShadow = true;
     house.receiveShadow = true;
@@ -939,7 +957,7 @@ const create3DEnvironment = async () => {
   const animate = () => {
     window.requestAnimationFrame(animate);
     physicsWorld.fixedStep();
-    cannonDebugger.update();
+    //cannonDebugger.update();
     car.position.copy(vehicle.chassisBody.position);
     car.quaternion.copy(vehicle.chassisBody.quaternion);
     controls.update();
