@@ -502,11 +502,10 @@ const create3DEnvironment = async () => {
 
     };
 
-    const mirrorGeometry = new THREE.PlaneGeometry(1.2, 2.2);
+    const mirrorGeometry = new THREE.PlaneGeometry(5, 5);
     const mirror =new Reflector(mirrorGeometry,mirrorOptions);
-    const mirror1 =new Reflector(mirrorGeometry,mirrorOptions);
-    mirror.rotateY(-Math.PI/3);
-    mirror.position.set(-25.5, 0.005, -8);
+    mirror.rotateY(Math.PI/4);
+    mirror.position.set(70, 0.005, -21);
     scene.add(mirror);
     
   };
