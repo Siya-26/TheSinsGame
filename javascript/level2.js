@@ -15,6 +15,8 @@ class Time {
     this.count = 3;
     this.countdownInterval = null;
     this.timerInterval = null;
+    this.isPaused = false;
+    this.difference = 1;
   }
 
   // Method to stop the timer and show the game-over screen if time runs out
@@ -22,10 +24,25 @@ class Time {
     if (this.time === 0 && this.state === "running") {
       clearInterval(this.timerInterval); // Stop the timer
       this.state = "stopped"; // Update the state
-      window.location.href = "lostScreen2.html"; // Redirect to lost screen
+      window.location.href = "lostScreen1.html"; // Redirect to lost screen
     } else if (this.time != 0 && this.state === "stopped") {
       clearInterval(this.countdownInterval);
-      window.location.href = "../html/winScreen2.html";
+      window.location.href = "../html/winScreen1.html";
+    }
+  }
+
+  pauseTime() {
+    if (this.isPaused) {
+      this.state = "paused";
+      clearInterval(this.timerInterval);
+      document.getElementById("countdown").innerHTML = `
+        <h3>Controls</h3>
+        <p>Use Arrow keys or WASD to move the car.</p>
+        <p>Press Space to brake.</p>
+      `;
+    }
+    else{
+      document.getElementById("countdown").innerHTML = "";
     }
   }
 
@@ -33,8 +50,9 @@ class Time {
   runTime() {
     this.state = "running"; // Update state to running
     this.timerInterval = setInterval(() => {
-      this.time -= 1; // Decrease time
+      this.time -= this.difference; // Decrease time
       document.getElementById("stopwatch").innerText = this.time; // Update stopwatch display
+      this.pauseTime();
       this.stopTime(); // Check if time should stop
     }, 1000); // Update every second
   }
@@ -170,6 +188,20 @@ const disableInputControls = (vehicle) => {
     }
   });
 };
+
+let isPaused = false;
+
+const pauseGame = (time) => {
+  console.log(isPaused);
+  time.isPaused = isPaused;
+  if(time.isPaused){
+    console.log("RESUME at T = ", time.time);
+  }
+  else{
+    time.runTime();
+  }
+};
+
 // PHYSICS WORLD
 const physicsWorld = new CANNON.World({
   gravity: new CANNON.Vec3(0, -9.82, 0),
@@ -1053,6 +1085,11 @@ const create3DEnvironment = async () => {
 
   const cannonDebugger = new CannonDebugger(scene, physicsWorld);
   const time = new Time(100, vehicle);
+  document.getElementById("pauseButton").onclick = function togglePause() {
+    console.log("CLICKED!");
+    isPaused = !isPaused;
+    pauseGame(time);
+  };
   enableInputControls(vehicle);
   time.startTime();
 

@@ -4,6 +4,7 @@ import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { FBXLoader } from "three/examples/jsm/loaders/FBXLoader.js";
 import * as CANNON from "cannon-es";
 import CannonDebugger from "cannon-es-debugger";
+import { ThreeMFLoader } from "three/examples/jsm/Addons.js";
 const selections = JSON.parse(sessionStorage.getItem("selections"));
 
 class Time {
@@ -33,6 +34,14 @@ class Time {
     if (this.isPaused) {
       this.state = "paused";
       clearInterval(this.timerInterval);
+      document.getElementById("countdown").innerHTML = `
+        <h3>Controls</h3>
+        <p>Use Arrow keys or WASD to move the car.</p>
+        <p>Press Space to brake.</p>
+      `;
+    }
+    else{
+      document.getElementById("countdown").innerHTML = "";
     }
   }
 
@@ -62,6 +71,7 @@ class Time {
     }, 1000); // Update every second
   }
 }
+
 
 // GAME PARAMETERS
 const maxSteerVal = Math.PI / 8;
@@ -501,14 +511,24 @@ let isFirstPerson = false; // Start with 3rd person by default
 
 // CAMERA OFFSET FOR BOTH VIEWS
 const thirdPersonOffset = new THREE.Vector3(-3, 2, 0); // Third-person view (chase view)
-const firstPersonOffset = new THREE.Vector3(1, 1, 0); // First-person view (inside car)
+const firstPersonOffset = new THREE.Vector3(0.5, 0, 0); // First-person view (inside car)
 
 // SMOOTH CAMERA FOLLOW FUNCTION (Updated to support both views)
 const smoothCameraFollow = (camera, car) => {
   if (isFirstPerson) {
-    // 1st person view: Position camera inside the car
-    const targetPosition = car.position.clone().add(firstPersonOffset);
-    camera.position.lerp(targetPosition, smoothFactor);
+    const carDirection = new THREE.Vector3();
+    car.getWorldDirection(carDirection);
+    const carRight = new THREE.Vector3()
+      .crossVectors(carDirection, new THREE.Vector3(0, 1, 0))
+      .normalize();
+
+    const targetPosition = car.position
+      .clone()
+      .add(carRight.clone().multiplyScalar(firstPersonOffset.x))
+      .setY(car.position.y + 0.5);
+
+    camera.position.lerp(new THREE.Vector3(car.position.x, car.position.y + 0.5, car.position.z), smoothFactor);
+    camera.lookAt(targetPosition);
   } else {
     // 3rd person view: Chase view logic
     const carDirection = new THREE.Vector3();
@@ -523,10 +543,8 @@ const smoothCameraFollow = (camera, car) => {
       .setY(fixedCameraY); // Set a fixed height for the camera
 
     camera.position.lerp(targetPosition, smoothFactor);
+    camera.lookAt(car.position);
   }
-
-  // Always make the camera look at the car
-  camera.lookAt(car.position);
 };
 
 // TOGGLE CAMERA VIEW ON 'P' KEY PRESS
