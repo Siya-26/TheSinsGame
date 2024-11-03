@@ -35,10 +35,10 @@ class Time {
       this.state = "paused";
       clearInterval(this.timerInterval);
       document.getElementById("countdown").innerHTML = `
-        <h3>Controls</h3>
-        <p>Use Arrow keys or WASD to move the car.</p>
-        <p>Press Space to brake.</p>
-      `;
+        <div class="button-container">
+                <button onclick="window.location.href='level1.html'">Try Again</button>
+                <button onclick="window.location.href='mainMenu.html'">Cancel</button>
+        </div>`;
     }
     else{
       document.getElementById("countdown").innerHTML = "";
