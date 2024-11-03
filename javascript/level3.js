@@ -421,7 +421,7 @@ const updateObstacles1 = (obstacles1) => {
 
 // CAMERA FOLLOW LOGIC (Chase View)
 const cameraOffset = new THREE.Vector3(-3, 2, 0); // Position to the side of the car
-const smoothFactor = 0.4; // Factor for smooth camera follow
+const smoothFactor = 0.5; // Factor for smooth camera follow
 const fixedCameraY = 2; // Fixed height for the camera
 
 
