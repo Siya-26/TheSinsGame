@@ -26,10 +26,10 @@ class Time {
     if (this.time === 0 && this.state === "running") {
       clearInterval(this.timerInterval); // Stop the timer
       this.state = "stopped"; // Update the state
-      window.location.href = "lostScreen1.html"; // Redirect to lost screen
+      window.location.href = "lostScreen3.html"; // Redirect to lost screen
     } else if (this.time != 0 && this.state === "stopped") {
       clearInterval(this.countdownInterval);
-      window.location.href = "../html/winScreen1.html";
+      window.location.href = "../html/winScreen3.html";
     }
   }
 
