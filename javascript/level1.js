@@ -14,6 +14,7 @@ class Time {
     this.countdownInterval = null;
     this.timerInterval = null;
     this.isPaused = false;
+    this.difference = 1;
   }
 
   // Method to stop the timer and show the game-over screen if time runs out
@@ -32,7 +33,6 @@ class Time {
     if (this.isPaused) {
       this.state = "paused";
       clearInterval(this.timerInterval);
-      console.log("GAME PAUSED!");
     }
   }
 
@@ -40,7 +40,7 @@ class Time {
   runTime() {
     this.state = "running"; // Update state to running
     this.timerInterval = setInterval(() => {
-      this.time -= 1; // Decrease time
+      this.time -= this.difference; // Decrease time
       document.getElementById("stopwatch").innerText = this.time; // Update stopwatch display
       this.pauseTime();
       this.stopTime(); // Check if time should stop
@@ -179,18 +179,19 @@ const disableInputControls = (vehicle) => {
   });
 };
 
-const pauseGame = (time) => {
-  window.addEventListener("keydown", (event) => {
-    if (event.key === "z" || event.key === "Z") {
-      time.isPaused = !time.isPaused;
-      if(!time.isPaused){
-        console.log("RESUME at T = ", time.time);
-        time.runTime();
-      }
-    }
-});
+let isPaused = false;
 
-}
+const pauseGame = (time) => {
+  console.log(isPaused);
+  time.isPaused = isPaused;
+  if(time.isPaused){
+    console.log("RESUME at T = ", time.time);
+  }
+  else{
+    time.runTime();
+  }
+};
+
 
 // PHYSICS WORLD
 const physicsWorld = new CANNON.World({
@@ -880,7 +881,11 @@ const create3DEnvironment = async () => {
 
   const cannonDebugger = new CannonDebugger(scene, physicsWorld);
   const time = new Time(100, vehicle);
-  pauseGame(time);
+  document.getElementById("pauseButton").onclick = function togglePause() {
+    console.log("CLICKED!");
+    isPaused = !isPaused;
+    pauseGame(time);
+  };
   time.startTime();
   enableInputControls(vehicle);
 
