@@ -13,6 +13,7 @@ class Time {
     this.count = 3;
     this.countdownInterval = null;
     this.timerInterval = null;
+    this.isPaused = false;
   }
 
   // Method to stop the timer and show the game-over screen if time runs out
@@ -27,12 +28,21 @@ class Time {
     }
   }
 
+  pauseTime() {
+    if (this.isPaused) {
+      this.state = "paused";
+      clearInterval(this.timerInterval);
+      console.log("GAME PAUSED!");
+    }
+  }
+
   // Method to start the main timer after the countdown finishes
   runTime() {
     this.state = "running"; // Update state to running
     this.timerInterval = setInterval(() => {
       this.time -= 1; // Decrease time
       document.getElementById("stopwatch").innerText = this.time; // Update stopwatch display
+      this.pauseTime();
       this.stopTime(); // Check if time should stop
     }, 1000); // Update every second
   }
@@ -168,6 +178,20 @@ const disableInputControls = (vehicle) => {
     }
   });
 };
+
+const pauseGame = (time) => {
+  window.addEventListener("keydown", (event) => {
+    if (event.key === "z" || event.key === "Z") {
+      time.isPaused = !time.isPaused;
+      if(!time.isPaused){
+        console.log("RESUME at T = ", time.time);
+        time.runTime();
+      }
+    }
+});
+
+}
+
 // PHYSICS WORLD
 const physicsWorld = new CANNON.World({
   gravity: new CANNON.Vec3(0, -9.82, 0),
@@ -856,6 +880,7 @@ const create3DEnvironment = async () => {
 
   const cannonDebugger = new CannonDebugger(scene, physicsWorld);
   const time = new Time(100, vehicle);
+  pauseGame(time);
   time.startTime();
   enableInputControls(vehicle);
 
@@ -896,11 +921,17 @@ const create3DEnvironment = async () => {
   // Inside your animate function, after updating the car's position:
   const animate = () => {
     window.requestAnimationFrame(animate);
-    physicsWorld.fixedStep();
-    //cannonDebugger.update();
-    car.position.copy(vehicle.chassisBody.position);
-    car.quaternion.copy(vehicle.chassisBody.quaternion);
-    controls.update();
+    if(time.isPaused){
+        physicsWorld.step(1 / 60);
+        renderer.render(scene, camera);
+    }
+    else{
+      physicsWorld.fixedStep();
+      //cannonDebugger.update();
+      car.position.copy(vehicle.chassisBody.position);
+      car.quaternion.copy(vehicle.chassisBody.quaternion);
+      controls.update();
+    }
 
     // Check car's position against waypoints
     checkWaypointProgress(car.position);
@@ -912,7 +943,6 @@ const create3DEnvironment = async () => {
       velocity.z *= 1 - frictionCoefficient;
     }
 
-    console.log("Car: ", car);
     const boundingBox = new THREE.Box3().setFromObject(car);
     const finishBox = new THREE.Box3().setFromObject(finish);
     if (boundingBox.intersectsBox(finishBox)) {
