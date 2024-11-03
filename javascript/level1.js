@@ -280,6 +280,31 @@ const boundaries = (positions) => {
   physicsWorld.addBody(body);
 };
 
+// M I N I M A P
+
+const miniMap = document.getElementById('mini_map');
+const miniMapRenderer = new THREE.WebGLRenderer({ antialias: true });
+miniMapRenderer.setSize(miniMap.offsetWidth, miniMap.offsetHeight);
+miniMap.appendChild(miniMapRenderer.domElement);
+
+// Calculate the aspect ratio
+const aspect = miniMap.offsetWidth / miniMap.offsetHeight;
+
+// Adjust these values as needed for your scene size
+const frustumSize = 182; // Total size of the camera view
+
+const miniMapCamera = new THREE.OrthographicCamera(
+    frustumSize * aspect / -2, // left
+    frustumSize * aspect / 2,  // right
+    frustumSize / 2,           // top
+    frustumSize / -2,          // bottom
+    0.1,                       // near
+    100                        // far
+);
+
+miniMapCamera.position.set(0, 95, 0);
+miniMapCamera.lookAt(0, 0, 0);
+
 // CAMERA FOLLOW LOGIC (Chase View)
 // Updated CAMERA FOLLOW LOGIC (Stable Side View)
 const cameraOffset = new THREE.Vector3(-3, 2, 0); // Position to the side of the car
@@ -552,13 +577,7 @@ const create3DEnvironment = async () => {
   building.push(
     await createHouse("../Models/tiny_house.glb", [0.6, 0.6, 0.6], [20, 0.1, 8])
   );
-  building.push(
-    await createHouse(
-      "../Models/tiny_house.glb",
-      [0.6, 0.6, 0.6],
-      [25, 0.1, 12]
-    )
-  );
+  
   building.push(
     await createHouse(
       "../Models/tiny_house.glb",
@@ -566,13 +585,7 @@ const create3DEnvironment = async () => {
       [30, 0.1, 10]
     )
   );
-  building.push(
-    await createHouse(
-      "../Models/tiny_house.glb",
-      [0.6, 0.6, 0.6],
-      [35, 0.1, 18]
-    )
-  );
+  
   building.push(
     await createHouse(
       "../Models/tiny_house.glb",
@@ -580,13 +593,7 @@ const create3DEnvironment = async () => {
       [40, 0.1, 20]
     )
   );
-  building.push(
-    await createHouse(
-      "../Models/tiny_house.glb",
-      [0.6, 0.6, 0.6],
-      [45, 0.1, 18]
-    )
-  );
+  
   building.push(
     await createHouse(
       "../Models/tiny_house.glb",
@@ -594,25 +601,12 @@ const create3DEnvironment = async () => {
       [50, 0.1, 15]
     )
   );
-  building.push(
-    await createHouse(
-      "../Models/tiny_house.glb",
-      [0.6, 0.6, 0.6],
-      [55, 0.1, 15]
-    )
-  );
+  
   building.push(
     await createHouse(
       "../Models/tiny_house.glb",
       [0.6, 0.6, 0.6],
       [60, 0.1, 15]
-    )
-  );
-  building.push(
-    await createHouse(
-      "../Models/tiny_house.glb",
-      [0.6, 0.6, 0.6],
-      [65, 0.1, 10]
     )
   );
 
@@ -625,14 +619,7 @@ const create3DEnvironment = async () => {
       { x: 0, y: Math.PI, z: 0 }
     )
   );
-  building.push(
-    await createHouse(
-      "../Models/tiny_house.glb",
-      [0.6, 0.6, 0.6],
-      [-35, 0.1, 33],
-      { x: 0, y: Math.PI, z: 0 }
-    )
-  );
+  
   building.push(
     await createHouse(
       "../Models/tiny_house.glb",
@@ -641,14 +628,7 @@ const create3DEnvironment = async () => {
       { x: 0, y: Math.PI, z: 0 }
     )
   );
-  building.push(
-    await createHouse(
-      "../Models/tiny_house.glb",
-      [0.6, 0.6, 0.6],
-      [20, 0.1, 33],
-      { x: 0, y: Math.PI, z: 0 }
-    )
-  );
+  
   building.push(
     await createHouse(
       "../Models/tiny_house.glb",
@@ -657,14 +637,7 @@ const create3DEnvironment = async () => {
       { x: 0, y: Math.PI, z: 0 }
     )
   );
-  building.push(
-    await createHouse(
-      "../Models/tiny_house.glb",
-      [0.6, 0.6, 0.6],
-      [30, 0.1, 35],
-      { x: 0, y: Math.PI, z: 0 }
-    )
-  );
+  
 
   // Warehouse Buildings
   building.push(
@@ -675,14 +648,7 @@ const create3DEnvironment = async () => {
       { x: 0, y: Math.PI / 2, z: 0 }
     )
   );
-  building.push(
-    await createHouse(
-      "../Models/tiny_house.glb",
-      [0.6, 0.6, 0.6],
-      [-65, 0.1, -20],
-      { x: 0, y: Math.PI / 2, z: 0 }
-    )
-  );
+  
   building.push(
     await createHouse(
       "../Models/tiny_house.glb",
@@ -691,14 +657,7 @@ const create3DEnvironment = async () => {
       { x: 0, y: Math.PI / 2, z: 0 }
     )
   );
-  building.push(
-    await createHouse(
-      "../Models/tiny_house.glb",
-      [0.6, 0.6, 0.6],
-      [-45, 0.1, -20],
-      { x: 0, y: Math.PI / 2, z: 0 }
-    )
-  );
+  
   building.push(
     await createHouse(
       "../Models/tiny_house.glb",
@@ -707,14 +666,7 @@ const create3DEnvironment = async () => {
       { x: 0, y: Math.PI / 2, z: 0 }
     )
   );
-  building.push(
-    await createHouse(
-      "../Models/tiny_house.glb",
-      [0.2, 0.2, 0.2],
-      [-25, 0.1, -20],
-      { x: 0, y: Math.PI / 2, z: 0 }
-    )
-  );
+ 
   building.push(
     await createHouse(
       "../Models/tiny_house.glb",
@@ -723,14 +675,7 @@ const create3DEnvironment = async () => {
       { x: 0, y: Math.PI / 2, z: 0 }
     )
   );
-  building.push(
-    await createHouse(
-      "../Models/tiny_house.glb",
-      [0.2, 0.2, 0.2],
-      [-5, 0.1, -25],
-      { x: 0, y: Math.PI / 2, z: 0 }
-    )
-  );
+ 
   building.push(
     await createHouse(
       "../Models/tiny_house.glb",
@@ -739,14 +684,7 @@ const create3DEnvironment = async () => {
       { x: 0, y: Math.PI / 2, z: 0 }
     )
   );
-  building.push(
-    await createHouse(
-      "../Models/tiny_house.glb",
-      [0.2, 0.2, 0.2],
-      [15, 0.1, -34],
-      { x: 0, y: Math.PI / 2, z: 0 }
-    )
-  );
+ 
   building.push(
     await createHouse(
       "../Models/tiny_house.glb",
@@ -755,14 +693,7 @@ const create3DEnvironment = async () => {
       { x: 0, y: Math.PI / 2, z: 0 }
     )
   );
-  building.push(
-    await createHouse(
-      "../Models/tiny_house.glb",
-      [0.2, 0.2, 0.2],
-      [35, 0.1, -34],
-      { x: 0, y: Math.PI / 2, z: 0 }
-    )
-  );
+  
   building.push(
     await createHouse(
       "../Models/tiny_house.glb",
@@ -771,14 +702,7 @@ const create3DEnvironment = async () => {
       { x: 0, y: Math.PI / 2, z: 0 }
     )
   );
-  building.push(
-    await createHouse(
-      "../Models/tiny_house.glb",
-      [0.2, 0.2, 0.2],
-      [55, 0.1, -34],
-      { x: 0, y: Math.PI / 2, z: 0 }
-    )
-  );
+  
   building.push(
     await createHouse(
       "../Models/tiny_house.glb",
@@ -796,14 +720,7 @@ const create3DEnvironment = async () => {
       { x: 0, y: -Math.PI / 2, z: 0 }
     )
   );
-  building.push(
-    await createHouse(
-      "../Models/tiny_house.glb",
-      [0.2, 0.2, 0.2],
-      [-45, 0.1, 0],
-      { x: 0, y: -Math.PI / 2, z: 0 }
-    )
-  );
+  
   building.push(
     await createHouse(
       "../Models/tiny_house.glb",
@@ -812,14 +729,7 @@ const create3DEnvironment = async () => {
       { x: 0, y: -Math.PI / 2, z: 0 }
     )
   );
-  building.push(
-    await createHouse(
-      "../Models/tiny_house.glb",
-      [0.2, 0.2, 0.2],
-      [-25, 0.1, 0],
-      { x: 0, y: -Math.PI / 2, z: 0 }
-    )
-  );
+ 
   building.push(
     await createHouse(
       "../Models/tiny_house.glb",
@@ -828,14 +738,7 @@ const create3DEnvironment = async () => {
       { x: 0, y: -Math.PI / 2, z: 0 }
     )
   );
-  building.push(
-    await createHouse(
-      "../Models/tiny_house.glb",
-      [0.2, 0.2, 0.2],
-      [-5, 0.1, 0],
-      { x: 0, y: -Math.PI / 2, z: 0 }
-    )
-  );
+  
   building.push(
     await createHouse(
       "../Models/tiny_house.glb",
@@ -844,14 +747,7 @@ const create3DEnvironment = async () => {
       { x: 0, y: -Math.PI / 2, z: 0 }
     )
   );
-  building.push(
-    await createHouse(
-      "../Models/tiny_house.glb",
-      [0.6, 0.6, 0.6],
-      [15, 0.1, -15],
-      { x: 0, y: -Math.PI / 2, z: 0 }
-    )
-  );
+ 
   building.push(
     await createHouse(
       "../Models/tiny_house.glb",
@@ -861,14 +757,7 @@ const create3DEnvironment = async () => {
     )
   );
 
-  building.push(
-    await createHouse(
-      "../Models/tiny_house.glb",
-      [0.6, 0.6, 0.6],
-      [-90, 0.1, 15],
-      { x: 0, y: Math.PI / 2, z: 0 }
-    )
-  );
+  
   building.push(
     await createHouse(
       "../Models/tiny_house.glb",
@@ -877,14 +766,7 @@ const create3DEnvironment = async () => {
       { x: 0, y: Math.PI / 2, z: 0 }
     )
   );
-  building.push(
-    await createHouse(
-      "../Models/tiny_house.glb",
-      [0.6, 0.6, 0.6],
-      [-90, 0.1, 45],
-      { x: 0, y: Math.PI / 2, z: 0 }
-    )
-  );
+ 
 
   building.push(
     await createHouse(
@@ -910,9 +792,10 @@ const create3DEnvironment = async () => {
   const trackMaterial = new THREE.MeshStandardMaterial({
     map: trackTexture,
     color: 0xffffff,
-    roughness: 0.8,
-    metalness: 0.2,
+    roughness: 0.4,
+    metalness: 0.5,
   });
+  
   track.scale.set(2, 2, 2);
   flag.scale.set(0.3, 0.3, 0.3);
   flag.position.set(45, 0.1, 26.6);
@@ -944,12 +827,12 @@ const create3DEnvironment = async () => {
   const ambientLight = new THREE.AmbientLight(0x555577, 0.2);
   scene.add(ambientLight);
 
-  const directionalLight = new THREE.DirectionalLight(0xcccccc, 0.8);
+  const directionalLight = new THREE.DirectionalLight(0xffa500, 0.6);
   directionalLight.position.set(80, 80, 80);
   directionalLight.castShadow = true;
   scene.add(directionalLight);
 
-  const sunLight = new THREE.DirectionalLight(0xffa500, 0.8);
+  const sunLight = new THREE.DirectionalLight(0xffa500, 0.6);
   sunLight.position.set(-80, 80, -80);
   sunLight.castShadow = true;
   scene.add(sunLight);
@@ -1007,6 +890,10 @@ const create3DEnvironment = async () => {
     }
   };
 
+  const renderMiniMap = () => {
+    miniMapRenderer.render(scene, miniMapCamera);
+  };
+
   // Inside your animate function, after updating the car's position:
   const animate = () => {
     window.requestAnimationFrame(animate);
@@ -1046,6 +933,8 @@ const create3DEnvironment = async () => {
 
     // Render the scene
     renderer.render(scene, camera);
+    renderMiniMap();
+
   };
 
   animate();

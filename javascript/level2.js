@@ -5,6 +5,9 @@ import { FBXLoader } from "three/examples/jsm/loaders/FBXLoader.js";
 import * as CANNON from "cannon-es";
 import CannonDebugger from "cannon-es-debugger";
 
+const selections = JSON.parse(sessionStorage.getItem("selections"));
+console.log("Selections: ", selections.car);
+
 class Time {
   constructor(time) {
     this.time = time;
@@ -55,7 +58,7 @@ class Time {
 // GAME PARAMETERS
 const maxSteerVal = Math.PI / 8;
 const maxForce = 10;
-const frictionCoefficient = 0.05;
+const frictionCoefficient = 0.02;
 const thirdPersonView = {
   fieldOfView: 75,
   aspect: window.innerWidth / window.innerHeight,
@@ -220,6 +223,31 @@ const { vehicle, wheelBody1, wheelBody2, wheelBody3, wheelBody4 } =
   physicsCar();
 vehicle.addToWorld(physicsWorld);
 
+const createCannonPlane = (x, y, z) => {
+  const roadWidth = 0.25;
+  const roadLength = 2;
+  const roadThickness = 0.05;
+
+  const planeShape = new CANNON.Box(
+    new CANNON.Vec3(roadWidth, roadThickness, roadLength)
+  );
+
+  const planeBody = new CANNON.Body({
+    mass: 0,
+  });
+  planeBody.addShape(planeShape);
+
+  planeBody.position.set(x, y, z);
+
+  planeBody.quaternion.setFromAxisAngle(new CANNON.Vec3(1, 0, 0), -Math.PI / 2);
+  planeBody.quaternion.setFromAxisAngle(new CANNON.Vec3(0, 0, 1), -Math.PI / 2);
+
+  return planeBody;
+};
+
+const startBody = createCannonPlane(41.5, 0.2, 26.75);
+physicsWorld.addBody(startBody);
+
 const boundaries = (positions) => {
   const mass = 1000;
   const body = new CANNON.Body({ mass });
@@ -252,6 +280,31 @@ const boundaries = (positions) => {
   physicsWorld.addBody(body);
 };
 
+// M I N I M A P
+
+const miniMap = document.getElementById('mini_map');
+const miniMapRenderer = new THREE.WebGLRenderer({ antialias: true });
+miniMapRenderer.setSize(miniMap.offsetWidth, miniMap.offsetHeight);
+miniMap.appendChild(miniMapRenderer.domElement);
+
+// Calculate the aspect ratio
+const aspect = miniMap.offsetWidth / miniMap.offsetHeight;
+
+// Adjust these values as needed for your scene size
+const frustumSize = 182; // Total size of the camera view
+
+const miniMapCamera = new THREE.OrthographicCamera(
+    frustumSize * aspect / -2, // left
+    frustumSize * aspect / 2,  // right
+    frustumSize / 2,           // top
+    frustumSize / -2,          // bottom
+    0.1,                       // near
+    100                        // far
+);
+
+miniMapCamera.position.set(0, 95, 0);
+miniMapCamera.lookAt(0, 0, 0);
+
 // CAMERA FOLLOW LOGIC (Chase View)
 // Updated CAMERA FOLLOW LOGIC (Stable Side View)
 const cameraOffset = new THREE.Vector3(-3, 2, 0); // Position to the side of the car
@@ -283,9 +336,23 @@ const buildPlane = () => {
   const roadWidth = 256;
   const roadLength = 256;
   const geometry = new THREE.PlaneGeometry(roadWidth, roadLength);
-  const material = new THREE.MeshBasicMaterial({ color: 0xcccccc });
+
+  // Load and apply an icy texture
+  const textureLoader = new THREE.TextureLoader();
+  const iceTexture = textureLoader.load("../Textures/ice.png"); // Use an ice texture of your choice
+  iceTexture.wrapS = THREE.RepeatWrapping;
+  iceTexture.wrapT = THREE.RepeatWrapping;
+  iceTexture.repeat.set(4, 4);
+
+  const material = new THREE.MeshStandardMaterial({
+    map: iceTexture,
+    roughness: 0,
+    metalness: 0.1,
+  });
+
   const plane = new THREE.Mesh(geometry, material);
   plane.rotation.x = -Math.PI / 2;
+  plane.receiveShadow = true;
   return plane;
 };
 
@@ -293,7 +360,18 @@ const finishPlane = () => {
   const roadWidth = 8;
   const roadLength = 2;
   const geometry = new THREE.PlaneGeometry(roadWidth, roadLength);
-  const material = new THREE.MeshBasicMaterial({ color: 0xcccccc });
+  const textureLoader = new THREE.TextureLoader();
+  const iceTexture = textureLoader.load("../Textures/ice.png"); // Path to your icy texture
+  iceTexture.wrapS = THREE.RepeatWrapping;
+  iceTexture.wrapT = THREE.RepeatWrapping;
+  iceTexture.repeat.set(4, 4);
+
+  const material = new THREE.MeshStandardMaterial({
+    map: iceTexture,
+    color: 0xffffff,
+    roughness: 0.3,
+    metalness: 0.6,
+  });
   const plane = new THREE.Mesh(geometry, material);
   plane.position.set(45, 0.1, 27.25);
   plane.rotation.y = -Math.PI / 2;
@@ -301,6 +379,17 @@ const finishPlane = () => {
 };
 
 const loader = new FBXLoader();
+
+const loadFlag = () => {
+  return new Promise((resolve, reject) => {
+    loader.load(
+      "../Models/Finish_Line.fbx",
+      (fbx) => resolve(fbx),
+      (xhr) => console.log(`${(xhr.loaded / xhr.total) * 100}% loaded`),
+      (error) => reject(error)
+    );
+  });
+};
 
 const loadTrack = () => {
   return new Promise((resolve, reject) => {
@@ -314,28 +403,80 @@ const loadTrack = () => {
 };
 
 const loadCarModel = async (scene) => {
-  return new Promise((resolve, reject) => {
-    const loader = new GLTFLoader();
-    loader.load(
-      "../Models/mazda_rx7_stylised.glb",
-      (gltf) => {
-        const car = gltf.scene;
-        car.scale.set(0.003, 0.003, 0.003); // Scale car
-        car.position.set(1000, 1000, 1000); // Position car
-        car.rotateX(-90); // Rotate car
-        car.traverse((child) => {
-          if (child.isMesh) {
-            child.material = new THREE.MeshStandardMaterial({
-              color: 0x000000,
-            });
-          }
-        });
-        resolve(car);
-      },
-      undefined,
-      (error) => reject(error)
-    );
-  });
+  if (selections.car == "Car A") {
+    return new Promise((resolve, reject) => {
+      const loader = new GLTFLoader();
+      loader.load(
+        "../Models/tesla_s.glb",
+        (gltf) => {
+          const car = gltf.scene;
+          car.scale.set(0.008, 0.008, 0.008);
+          car.position.set(1000, 1000, 1000);
+          car.position.y += 0.05;
+          car.traverse((child) => {
+            if (child.isMesh) {
+              //child.material = new THREE.MeshStandardMaterial({
+              //  color: 0xb22222,
+              //});
+              child.rotateZ(-91.1);
+            }
+          });
+          resolve(car);
+        },
+        undefined,
+        (error) => reject(error)
+      );
+    });
+  } else if (selections.car == "Car B") {
+    return new Promise((resolve, reject) => {
+      const loader = new GLTFLoader();
+      loader.load(
+        "../Models/mazda_rx7_stylised.glb",
+        (gltf) => {
+          const car = gltf.scene;
+          car.scale.set(0.003, 0.003, 0.003); // Scale car
+          car.position.set(1000, 1000, 1000); // Position car
+          car.position.y += 0.05; // Slightly raises car above the track to avoid z-fighting
+          car.rotateX(-90); // Rotate car
+          car.traverse((child) => {
+            //if (child.isMesh) {
+            //child.material = new THREE.MeshStandardMaterial({
+            //  color: 0xb22222,
+            //});
+            //}
+          });
+          resolve(car);
+        },
+        undefined,
+        (error) => reject(error)
+      );
+    });
+  } else {
+    return new Promise((resolve, reject) => {
+      const loader = new GLTFLoader();
+      loader.load(
+        "../Models/cyberpunk_car.glb",
+        (gltf) => {
+          const car = gltf.scene;
+          car.scale.set(0.003, 0.003, 0.003); // Scale car
+          car.position.set(1000, 1000, 1000); // Position car
+          car.position.y += 0.05; // Slightly raises car above the track to avoid z-fighting
+          car.rotateX(-90); // Rotate car
+          car.traverse((child) => {
+            if (child.isMesh) {
+              //child.material = new THREE.MeshStandardMaterial({
+              //  color: 0xb22222,
+              //});
+              child.rotateY(89.5);
+            }
+          });
+          resolve(car);
+        },
+        undefined,
+        (error) => reject(error)
+      );
+    });
+  }
 };
 
 const loadSkybox = (scene) => {
@@ -419,6 +560,7 @@ const createHouse = async (
   house.rotation.set(rotation.x, rotation.y, rotation.z); // Apply rotation
   return house;
 };
+
 // CREATE ENVIRONMENT
 const create3DEnvironment = async () => {
   const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -436,432 +578,417 @@ const create3DEnvironment = async () => {
   camera.position.set(0, 10, 0);
 
   const controls = new OrbitControls(camera, renderer.domElement);
+  controls.enableZoom = true; // Enable zooming
+  controls.minDistance = 5; // Set minimum zoom distance
+  controls.maxDistance = 100; // Set maximum zoom distance
   const scene = new THREE.Scene();
 
   loadSkybox(scene);
 
+  const createSnow = () => {
+    const snowCount = 1500; // Number of snow particles
+    const snowGeometry = new THREE.BufferGeometry();
+    const snowPositions = [];
+
+    for (let i = 0; i < snowCount; i++) {
+      snowPositions.push(
+        Math.random() * 200 - 100, // X position
+        Math.random() * 200, // Y position (falling height)
+        Math.random() * 200 - 100 // Z position
+      );
+    }
+
+    snowGeometry.setAttribute(
+      "position",
+      new THREE.Float32BufferAttribute(snowPositions, 3)
+    );
+
+    const snowMaterial = new THREE.PointsMaterial({
+      color: 0xffffff, // White color for snow
+      size: 0.2, // Adjust size for a snowflake effect
+      transparent: true,
+      opacity: 0.8,
+    });
+
+    const snow = new THREE.Points(snowGeometry, snowMaterial);
+    scene.add(snow);
+
+    // Animate snow fall
+    function animateSnow() {
+      const positions = snow.geometry.attributes.position.array;
+      for (let i = 1; i < positions.length; i += 3) {
+        positions[i] -= 0.1; // Fall speed for snow
+        if (positions[i] < 0) positions[i] = 200; // Reset to top for continuous fall
+      }
+      snow.geometry.attributes.position.needsUpdate = true;
+    }
+
+    return animateSnow;
+  };
+
+  // Add rain animation call in the animate loop
+  const animateSnow = createSnow();
+  scene.fog = new THREE.FogExp2(0x9db3b5, 0.02);
+
   const plane = buildPlane();
   const model = await loadTrack();
+  const flag = await loadFlag();
   const car = await loadCarModel(scene);
 
   // Create an array to hold house models
-  const houses = [];
+  const building = [];
 
-  // Load houses and add them to the array
-  //Tiny House
-
-  houses.push(
+  // Old Buildings
+  building.push(
     await createHouse(
-      "../Models/tiny_house.glb",
+      "../Models/old_building__lowpoly.glb",
       [0.6, 0.6, 0.6],
-      [-10, 0.1, 25]
+      [20, 0.1, 8]
     )
   );
-  houses.push(
+  building.push(
     await createHouse(
-      "../Models/tiny_house.glb",
+      "../Models/old_building__lowpoly.glb",
       [0.6, 0.6, 0.6],
-      [-20, 0.1, 25]
+      [25, 0.1, 12]
     )
   );
-  houses.push(
-    await createHouse("../Models/tiny_house.glb", [0.6, 0.6, 0.6], [0, 0.1, 15])
-  );
-  houses.push(
+  building.push(
     await createHouse(
-      "../Models/tiny_house.glb",
+      "../Models/old_building__lowpoly.glb",
       [0.6, 0.6, 0.6],
-      [15, 0.1, 10]
+      [30, 0.1, 10]
     )
   );
-  houses.push(
+  building.push(
     await createHouse(
-      "../Models/tiny_house.glb",
+      "../Models/old_building__lowpoly.glb",
       [0.6, 0.6, 0.6],
-      [20, 0.1, 15]
+      [35, 0.1, 18]
     )
   );
-  houses.push(
+  building.push(
     await createHouse(
-      "../Models/tiny_house.glb",
+      "../Models/old_building__lowpoly.glb",
       [0.6, 0.6, 0.6],
-      [25, 0.1, 18]
+      [40, 0.1, 20]
     )
   );
-  houses.push(
+  building.push(
     await createHouse(
-      "../Models/tiny_house.glb",
+      "../Models/old_building__lowpoly.glb",
       [0.6, 0.6, 0.6],
-      [30, 0.1, 15]
+      [45, 0.1, 18]
     )
   );
-  houses.push(
+  building.push(
     await createHouse(
-      "../Models/tiny_house.glb",
+      "../Models/old_building__lowpoly.glb",
       [0.6, 0.6, 0.6],
-      [35, 0.1, 22]
+      [50, 0.1, 15]
     )
   );
-  houses.push(
+  building.push(
     await createHouse(
-      "../Models/tiny_house.glb",
+      "../Models/old_building__lowpoly.glb",
       [0.6, 0.6, 0.6],
-      [40, 0.1, 22]
+      [55, 0.1, 15]
     )
   );
-  houses.push(
+  building.push(
     await createHouse(
-      "../Models/tiny_house.glb",
+      "../Models/old_building__lowpoly.glb",
       [0.6, 0.6, 0.6],
-      [45, 0.1, 22]
+      [60, 0.1, 15]
     )
   );
-  houses.push(
+  building.push(
     await createHouse(
-      "../Models/tiny_house.glb",
+      "../Models/old_building__lowpoly.glb",
       [0.6, 0.6, 0.6],
-      [50, 0.1, 21]
-    )
-  );
-  houses.push(
-    await createHouse(
-      "../Models/tiny_house.glb",
-      [0.6, 0.6, 0.6],
-      [55, 0.1, 20]
-    )
-  );
-  houses.push(
-    await createHouse(
-      "../Models/tiny_house.glb",
-      [0.6, 0.6, 0.6],
-      [60, 0.1, 19]
-    )
-  );
-  houses.push(
-    await createHouse(
-      "../Models/tiny_house.glb",
-      [0.6, 0.6, 0.6],
-      [65, 0.1, 15]
+      [65, 0.1, 10]
     )
   );
 
-  houses.push(
+  // Rotated Old Buildings
+  building.push(
     await createHouse(
-      "../Models/tiny_house.glb",
+      "../Models/old_building__lowpoly.glb",
       [0.6, 0.6, 0.6],
-      [-30, 0.1, 30],
+      [-30, 0.1, 35],
       { x: 0, y: Math.PI, z: 0 }
     )
   );
-  houses.push(
+  building.push(
     await createHouse(
-      "../Models/tiny_house.glb",
+      "../Models/old_building__lowpoly.glb",
       [0.6, 0.6, 0.6],
-      [-35, 0.1, 25],
+      [-35, 0.1, 33],
       { x: 0, y: Math.PI, z: 0 }
     )
   );
-  houses.push(
+  building.push(
     await createHouse(
-      "../Models/tiny_house.glb",
+      "../Models/old_building__lowpoly.glb",
       [0.6, 0.6, 0.6],
       [15, 0.1, 30],
       { x: 0, y: Math.PI, z: 0 }
     )
   );
-  houses.push(
+  building.push(
     await createHouse(
-      "../Models/tiny_house.glb",
+      "../Models/old_building__lowpoly.glb",
       [0.6, 0.6, 0.6],
       [20, 0.1, 33],
       { x: 0, y: Math.PI, z: 0 }
     )
   );
-  houses.push(
+  building.push(
     await createHouse(
-      "../Models/tiny_house.glb",
+      "../Models/old_building__lowpoly.glb",
       [0.6, 0.6, 0.6],
-      [25, 0.1, 33],
+      [25, 0.1, 35],
       { x: 0, y: Math.PI, z: 0 }
     )
   );
-  houses.push(
+  building.push(
     await createHouse(
-      "../Models/tiny_house.glb",
+      "../Models/old_building__lowpoly.glb",
       [0.6, 0.6, 0.6],
-      [30, 0.1, 33],
-      { x: 0, y: Math.PI, z: 0 }
-    )
-  );
-  houses.push(
-    await createHouse(
-      "../Models/tiny_house.glb",
-      [0.6, 0.6, 0.6],
-      [35, 0.1, 33],
-      { x: 0, y: Math.PI, z: 0 }
-    )
-  );
-  houses.push(
-    await createHouse(
-      "../Models/tiny_house.glb",
-      [0.6, 0.6, 0.6],
-      [40, 0.1, 33],
-      { x: 0, y: Math.PI, z: 0 }
-    )
-  );
-  houses.push(
-    await createHouse(
-      "../Models/tiny_house.glb",
-      [0.6, 0.6, 0.6],
-      [45, 0.1, 33],
-      { x: 0, y: Math.PI, z: 0 }
-    )
-  );
-  houses.push(
-    await createHouse(
-      "../Models/tiny_house.glb",
-      [0.6, 0.6, 0.6],
-      [50, 0.1, 33],
-      { x: 0, y: Math.PI, z: 0 }
-    )
-  );
-  houses.push(
-    await createHouse(
-      "../Models/tiny_house.glb",
-      [0.6, 0.6, 0.6],
-      [55, 0.1, 33],
-      { x: 0, y: Math.PI, z: 0 }
-    )
-  );
-  houses.push(
-    await createHouse(
-      "../Models/tiny_house.glb",
-      [0.6, 0.6, 0.6],
-      [60, 0.1, 33],
-      { x: 0, y: Math.PI, z: 0 }
-    )
-  );
-  houses.push(
-    await createHouse(
-      "../Models/tiny_house.glb",
-      [0.6, 0.6, 0.6],
-      [65, 0.1, 33],
+      [30, 0.1, 35],
       { x: 0, y: Math.PI, z: 0 }
     )
   );
 
-  //Shanty House
-  houses.push(
+  // Warehouse Buildings
+  building.push(
     await createHouse(
-      "../Models/shanty.glb",
+      "../Models/warehouse_building.glb",
       [0.2, 0.2, 0.2],
       [-75, 0.1, -15],
       { x: 0, y: Math.PI / 2, z: 0 }
     )
   );
-  houses.push(
+  building.push(
     await createHouse(
-      "../Models/shanty.glb",
+      "../Models/warehouse_building.glb",
       [0.2, 0.2, 0.2],
       [-65, 0.1, -20],
       { x: 0, y: Math.PI / 2, z: 0 }
     )
   );
-  houses.push(
+  building.push(
     await createHouse(
-      "../Models/shanty.glb",
+      "../Models/warehouse_building.glb",
       [0.2, 0.2, 0.2],
       [-55, 0.1, -20],
       { x: 0, y: Math.PI / 2, z: 0 }
     )
   );
-  houses.push(
+  building.push(
     await createHouse(
-      "../Models/shanty.glb",
+      "../Models/warehouse_building.glb",
       [0.2, 0.2, 0.2],
       [-45, 0.1, -20],
       { x: 0, y: Math.PI / 2, z: 0 }
     )
   );
-  houses.push(
+  building.push(
     await createHouse(
-      "../Models/shanty.glb",
+      "../Models/warehouse_building.glb",
       [0.2, 0.2, 0.2],
       [-35, 0.1, -20],
       { x: 0, y: Math.PI / 2, z: 0 }
     )
   );
-  houses.push(
+  building.push(
     await createHouse(
-      "../Models/shanty.glb",
+      "../Models/warehouse_building.glb",
       [0.2, 0.2, 0.2],
       [-25, 0.1, -20],
       { x: 0, y: Math.PI / 2, z: 0 }
     )
   );
-  houses.push(
+  building.push(
     await createHouse(
-      "../Models/shanty.glb",
+      "../Models/warehouse_building.glb",
       [0.2, 0.2, 0.2],
       [-15, 0.1, -20],
       { x: 0, y: Math.PI / 2, z: 0 }
     )
   );
-  houses.push(
-    await createHouse("../Models/shanty.glb", [0.2, 0.2, 0.2], [-5, 0.1, -25], {
-      x: 0,
-      y: Math.PI / 2,
-      z: 0,
-    })
-  );
-  houses.push(
-    await createHouse("../Models/shanty.glb", [0.2, 0.2, 0.2], [5, 0.1, -34], {
-      x: 0,
-      y: Math.PI / 2,
-      z: 0,
-    })
-  );
-  houses.push(
-    await createHouse("../Models/shanty.glb", [0.2, 0.2, 0.2], [15, 0.1, -34], {
-      x: 0,
-      y: Math.PI / 2,
-      z: 0,
-    })
-  );
-  houses.push(
-    await createHouse("../Models/shanty.glb", [0.2, 0.2, 0.2], [25, 0.1, -34], {
-      x: 0,
-      y: Math.PI / 2,
-      z: 0,
-    })
-  );
-  houses.push(
-    await createHouse("../Models/shanty.glb", [0.2, 0.2, 0.2], [35, 0.1, -34], {
-      x: 0,
-      y: Math.PI / 2,
-      z: 0,
-    })
-  );
-  houses.push(
-    await createHouse("../Models/shanty.glb", [0.2, 0.2, 0.2], [45, 0.1, -34], {
-      x: 0,
-      y: Math.PI / 2,
-      z: 0,
-    })
-  );
-  houses.push(
-    await createHouse("../Models/shanty.glb", [0.2, 0.2, 0.2], [55, 0.1, -34], {
-      x: 0,
-      y: Math.PI / 2,
-      z: 0,
-    })
-  );
-  houses.push(
-    await createHouse("../Models/shanty.glb", [0.2, 0.2, 0.2], [65, 0.1, -34], {
-      x: 0,
-      y: Math.PI / 2,
-      z: 0,
-    })
-  );
-
-  houses.push(
-    await createHouse("../Models/shanty.glb", [0.2, 0.2, 0.2], [-55, 0.1, 0], {
-      x: 0,
-      y: -Math.PI / 2,
-      z: 0,
-    })
-  );
-  houses.push(
-    await createHouse("../Models/shanty.glb", [0.2, 0.2, 0.2], [-45, 0.1, 0], {
-      x: 0,
-      y: -Math.PI / 2,
-      z: 0,
-    })
-  );
-  houses.push(
-    await createHouse("../Models/shanty.glb", [0.2, 0.2, 0.2], [-35, 0.1, 0], {
-      x: 0,
-      y: -Math.PI / 2,
-      z: 0,
-    })
-  );
-  houses.push(
-    await createHouse("../Models/shanty.glb", [0.2, 0.2, 0.2], [-25, 0.1, 0], {
-      x: 0,
-      y: -Math.PI / 2,
-      z: 0,
-    })
-  );
-  houses.push(
-    await createHouse("../Models/shanty.glb", [0.2, 0.2, 0.2], [-15, 0.1, 0], {
-      x: 0,
-      y: -Math.PI / 2,
-      z: 0,
-    })
-  );
-  houses.push(
-    await createHouse("../Models/shanty.glb", [0.2, 0.2, 0.2], [-5, 0.1, 0], {
-      x: 0,
-      y: -Math.PI / 2,
-      z: 0,
-    })
-  );
-  houses.push(
-    await createHouse("../Models/shanty.glb", [0.2, 0.2, 0.2], [5, 0.1, -10], {
-      x: 0,
-      y: -Math.PI / 2,
-      z: 0,
-    })
-  );
-  houses.push(
-    await createHouse("../Models/shanty.glb", [0.2, 0.2, 0.2], [15, 0.1, -15], {
-      x: 0,
-      y: -Math.PI / 2,
-      z: 0,
-    })
-  );
-  houses.push(
-    await createHouse("../Models/shanty.glb", [0.2, 0.2, 0.2], [25, 0.1, -15], {
-      x: 0,
-      y: -Math.PI / 2,
-      z: 0,
-    })
-  );
-
-  // Bar
-
-  houses.push(
+  building.push(
     await createHouse(
-      "../Models/bar_shack.glb",
-      [0.015, 0.015, 0.015],
-      [10, 0.1, 11]
+      "../Models/warehouse_building.glb",
+      [0.2, 0.2, 0.2],
+      [-5, 0.1, -25],
+      { x: 0, y: Math.PI / 2, z: 0 }
+    )
+  );
+  building.push(
+    await createHouse(
+      "../Models/warehouse_building.glb",
+      [0.2, 0.2, 0.2],
+      [5, 0.1, -34],
+      { x: 0, y: Math.PI / 2, z: 0 }
+    )
+  );
+  building.push(
+    await createHouse(
+      "../Models/warehouse_building.glb",
+      [0.2, 0.2, 0.2],
+      [15, 0.1, -34],
+      { x: 0, y: Math.PI / 2, z: 0 }
+    )
+  );
+  building.push(
+    await createHouse(
+      "../Models/warehouse_building.glb",
+      [0.2, 0.2, 0.2],
+      [25, 0.1, -34],
+      { x: 0, y: Math.PI / 2, z: 0 }
+    )
+  );
+  building.push(
+    await createHouse(
+      "../Models/warehouse_building.glb",
+      [0.2, 0.2, 0.2],
+      [35, 0.1, -34],
+      { x: 0, y: Math.PI / 2, z: 0 }
+    )
+  );
+  building.push(
+    await createHouse(
+      "../Models/warehouse_building.glb",
+      [0.2, 0.2, 0.2],
+      [45, 0.1, -34],
+      { x: 0, y: Math.PI / 2, z: 0 }
+    )
+  );
+  building.push(
+    await createHouse(
+      "../Models/warehouse_building.glb",
+      [0.2, 0.2, 0.2],
+      [55, 0.1, -34],
+      { x: 0, y: Math.PI / 2, z: 0 }
+    )
+  );
+  building.push(
+    await createHouse(
+      "../Models/warehouse_building.glb",
+      [0.2, 0.2, 0.2],
+      [65, 0.1, -34],
+      { x: 0, y: Math.PI / 2, z: 0 }
     )
   );
 
-  //Everything
-  // houses.push(await createHouse('../Models/tree.glb', [0.5, 0.5, 0.5], [-90, 0.1, 15], {x: 0, y: Math.PI / 2, z: 0}));
-  // houses.push(await createHouse('../Models/tree.glb', [0.5, 0.5, 0.5], [-90, 0.1, -5], {x: 0, y: Math.PI / 2, z: 0}));
-  // houses.push(await createHouse('../Models/tree.glb', [0.5, 0.5, 0.5], [-90, 0.1, 45], {x: 0, y: Math.PI / 2, z: 0}));
-
-  houses.push(
-    await createHouse("../Models/grass.glb", [2, 2, 2], [15, 0.1, 10])
-  );
-  houses.push(
-    await createHouse("../Models/grass.glb", [2, 2, 2], [15, 0.1, 20])
-  );
-  houses.push(
-    await createHouse("../Models/grass.glb", [2, 2, 2], [15, 0.1, 30])
-  );
-
-  houses.push(
+  building.push(
     await createHouse(
-      "../Models/soccer_field.glb",
+      "../Models/warehouse_building.glb",
+      [0.2, 0.2, 0.2],
+      [-55, 0.1, 0],
+      { x: 0, y: -Math.PI / 2, z: 0 }
+    )
+  );
+  building.push(
+    await createHouse(
+      "../Models/warehouse_building.glb",
+      [0.2, 0.2, 0.2],
+      [-45, 0.1, 0],
+      { x: 0, y: -Math.PI / 2, z: 0 }
+    )
+  );
+  building.push(
+    await createHouse(
+      "../Models/warehouse_building.glb",
+      [0.2, 0.2, 0.2],
+      [-35, 0.1, 0],
+      { x: 0, y: -Math.PI / 2, z: 0 }
+    )
+  );
+  building.push(
+    await createHouse(
+      "../Models/warehouse_building.glb",
+      [0.2, 0.2, 0.2],
+      [-25, 0.1, 0],
+      { x: 0, y: -Math.PI / 2, z: 0 }
+    )
+  );
+  building.push(
+    await createHouse(
+      "../Models/warehouse_building.glb",
+      [0.2, 0.2, 0.2],
+      [-15, 0.1, 0],
+      { x: 0, y: -Math.PI / 2, z: 0 }
+    )
+  );
+  building.push(
+    await createHouse(
+      "../Models/warehouse_building.glb",
+      [0.2, 0.2, 0.2],
+      [-5, 0.1, 0],
+      { x: 0, y: -Math.PI / 2, z: 0 }
+    )
+  );
+  building.push(
+    await createHouse(
+      "../Models/warehouse_building.glb",
+      [0.2, 0.2, 0.2],
+      [5, 0.1, -10],
+      { x: 0, y: -Math.PI / 2, z: 0 }
+    )
+  );
+  building.push(
+    await createHouse(
+      "../Models/warehouse_building.glb",
+      [0.2, 0.2, 0.2],
+      [15, 0.1, -15],
+      { x: 0, y: -Math.PI / 2, z: 0 }
+    )
+  );
+  building.push(
+    await createHouse(
+      "../Models/warehouse_building.glb",
+      [0.2, 0.2, 0.2],
+      [25, 0.1, -15],
+      { x: 0, y: -Math.PI / 2, z: 0 }
+    )
+  );
+
+  building.push(
+    await createHouse(
+      "../Models/warehouse_building.glb",
+      [0.5, 0.5, 0.5],
+      [-90, 0.1, 15],
+      { x: 0, y: Math.PI / 2, z: 0 }
+    )
+  );
+  building.push(
+    await createHouse(
+      "../Models/old_building__lowpoly.glb",
+      [0.5, 0.5, 0.5],
+      [-90, 0.1, -5],
+      { x: 0, y: Math.PI / 2, z: 0 }
+    )
+  );
+  building.push(
+    await createHouse(
+      "../Models/warehouse_building.glb",
+      [0.5, 0.5, 0.5],
+      [-90, 0.1, 45],
+      { x: 0, y: Math.PI / 2, z: 0 }
+    )
+  );
+
+  building.push(
+    await createHouse(
+      "../Models/suspicious_business_office.glb",
       [0.5, 0.5, 0.5],
       [50, 0.1, -10],
       { x: 0, y: Math.PI / 2, z: 0 }
     )
   );
-  houses.push(
+  building.push(
     await createHouse(
       "../Models/playground.glb",
       [1.5, 1.5, 1.5],
@@ -872,11 +999,23 @@ const create3DEnvironment = async () => {
 
   const track = model.children[0].children[7];
   const textureLoader = new THREE.TextureLoader();
-  const trackTexture = textureLoader.load("../Models/road.jpg");
-  const trackMaterial = new THREE.MeshStandardMaterial({ map: trackTexture });
+  const trackTexture = textureLoader.load("../Textures/ice.png");
+  const trackMaterial = new THREE.MeshStandardMaterial({
+    map: trackTexture,
+    color: 0xffffff, // Ensures the texture stays white
+    roughness: 0.8,
+    metalness: 0.2,
+  });
+
   track.scale.set(2, 2, 2);
+  flag.scale.set(0.3, 0.3, 0.3);
+  flag.position.set(45, 0.1, 26.6);
+  flag.rotateY(29.8);
+  flag.rotateY(-160.2);
+  track.material[1].emissive = 0xb0b0b0;
+  track.material[3] = trackMaterial;
   track.material[4] = trackMaterial;
-  track.material[5].emissive = 0xffffff;
+  track.material[5].emissive = 0xb0b0b0;
   const t = model.children[0].children[7];
   boundaries(t.geometry.attributes.position.array);
   const finish = finishPlane();
@@ -886,18 +1025,33 @@ const create3DEnvironment = async () => {
   scene.add(plane);
   scene.add(track);
   scene.add(car);
-  // Add all houses to the scene
-  houses.forEach((house) => scene.add(house));
+  scene.add(flag);
+
+  // Add all building to the scene
+  building.forEach((house) => scene.add(house));
 
   // L I G H T I N G
-  const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+  const ambientLight = new THREE.AmbientLight(0x555577, 0.2);
   scene.add(ambientLight);
 
-  const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
-  directionalLight.position.set(10, 10, 10);
+  const directionalLight = new THREE.DirectionalLight(0xcccccc, 0.4);
+  directionalLight.position.set(50, 50, 50);
   scene.add(directionalLight);
 
-  //const cannonDebugger = new CannonDebugger(scene, physicsWorld);
+  const moonLight = new THREE.DirectionalLight(0xaaaaee, 0.3);
+  moonLight.position.set(-30, 50, -30);
+  moonLight.castShadow = true;
+  scene.add(moonLight);
+
+  const spotlight = new THREE.SpotLight(0x8888ff, 0.1); // Very dim spotlight for ambient effect
+  spotlight.position.set(10, 10, 10); // Adjust position as needed
+  spotlight.angle = Math.PI / 6;
+  spotlight.penumbra = 0.5;
+  spotlight.decay = 2;
+  spotlight.distance = 50;
+  scene.add(spotlight);
+
+  const cannonDebugger = new CannonDebugger(scene, physicsWorld);
   const time = new Time(100, vehicle);
   time.startTime();
 
@@ -931,11 +1085,16 @@ const create3DEnvironment = async () => {
     }
   };
 
+  const renderMiniMap = () => {
+    miniMapRenderer.render(scene, miniMapCamera);
+  };
+  
+
   // Inside your animate function, after updating the car's position:
   const animate = () => {
     window.requestAnimationFrame(animate);
     physicsWorld.fixedStep();
-    //cannonDebugger.update();
+    cannonDebugger.update();
     car.position.copy(vehicle.chassisBody.position);
     car.quaternion.copy(vehicle.chassisBody.quaternion);
     controls.update();
@@ -956,22 +1115,24 @@ const create3DEnvironment = async () => {
     } else {
       disableInputControls(vehicle);
     }
-
-    const boundingBox = new THREE.Box3().setFromObject(
-      car.children[0].children[0].children[0].children[0].children[0]
-        .children[0]
-    );
+    console.log("Car: ", car);
+    const boundingBox = new THREE.Box3().setFromObject(car);
     const finishBox = new THREE.Box3().setFromObject(finish);
     if (boundingBox.intersectsBox(finishBox)) {
       time.state = "stopped";
     }
+
+    animateSnow(); // Adds the continuous rain effect
 
     // Smooth camera follow the car
     smoothCameraFollow(camera, car);
 
     // Render the scene
     renderer.render(scene, camera);
+    renderMiniMap();
+
   };
+
   animate();
 };
 
