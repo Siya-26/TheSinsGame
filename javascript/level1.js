@@ -4,9 +4,7 @@ import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { FBXLoader } from "three/examples/jsm/loaders/FBXLoader.js";
 import * as CANNON from "cannon-es";
 import CannonDebugger from "cannon-es-debugger";
-
 const selections = JSON.parse(sessionStorage.getItem("selections"));
-console.log("Selections: ", selections.car);
 
 class Time {
   constructor(time) {
@@ -308,7 +306,7 @@ miniMapCamera.lookAt(0, 0, 0);
 // CAMERA FOLLOW LOGIC (Chase View)
 // Updated CAMERA FOLLOW LOGIC (Stable Side View)
 const cameraOffset = new THREE.Vector3(-3, 2, 0); // Position to the side of the car
-const smoothFactor = 0.2; // Factor for smooth camera follow
+const smoothFactor = 0.4; // Factor for smooth camera follow
 const fixedCameraY = 2; // Fixed height for the camera
 
 // G A M E   W O R L D
@@ -420,11 +418,11 @@ const loadCarModel = async (scene) => {
           car.position.y += 0.05; // Slightly raises car above the track to avoid z-fighting
           car.rotateX(-90); // Rotate car
           car.traverse((child) => {
-            //if (child.isMesh) {
-            //child.material = new THREE.MeshStandardMaterial({
-            //  color: 0xb22222,
-            //});
-            //}
+          //  if (child.isMesh) {
+          //  child.material = new THREE.MeshStandardMaterial({
+          //    color: 0x000000,
+          //  });
+          //  }
           });
           resolve(car);
         },
@@ -859,6 +857,7 @@ const create3DEnvironment = async () => {
   const cannonDebugger = new CannonDebugger(scene, physicsWorld);
   const time = new Time(100, vehicle);
   time.startTime();
+  enableInputControls(vehicle);
 
   const waypoints = [
     new THREE.Vector3(0, 0, 0),
@@ -898,7 +897,7 @@ const create3DEnvironment = async () => {
   const animate = () => {
     window.requestAnimationFrame(animate);
     physicsWorld.fixedStep();
-    cannonDebugger.update();
+    //cannonDebugger.update();
     car.position.copy(vehicle.chassisBody.position);
     car.quaternion.copy(vehicle.chassisBody.quaternion);
     controls.update();
@@ -913,12 +912,6 @@ const create3DEnvironment = async () => {
       velocity.z *= 1 - frictionCoefficient;
     }
 
-    // Enable or disable input controls based on time state
-    if (time.state === "running") {
-      enableInputControls(vehicle);
-    } else {
-      disableInputControls(vehicle);
-    }
     console.log("Car: ", car);
     const boundingBox = new THREE.Box3().setFromObject(car);
     const finishBox = new THREE.Box3().setFromObject(finish);

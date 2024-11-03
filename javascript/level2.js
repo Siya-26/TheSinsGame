@@ -58,7 +58,7 @@ class Time {
 // GAME PARAMETERS
 const maxSteerVal = Math.PI / 8;
 const maxForce = 10;
-const frictionCoefficient = 0.02;
+const frictionCoefficient = 0.05;
 const thirdPersonView = {
   fieldOfView: 75,
   aspect: window.innerWidth / window.innerHeight,
@@ -202,7 +202,7 @@ const addWheel = (vehicle, position, axisWidth) => {
 const physicsCar = () => {
   const carBody = new CANNON.Body({
     mass: 20,
-    shape: new CANNON.Box(new CANNON.Vec3(1, 0.05, 0.5)),
+    shape: new CANNON.Box(new CANNON.Vec3(0.7, 0.05, 0.4)),
     position: new CANNON.Vec3(40, 0.1, 27.25),
   });
 
@@ -211,10 +211,10 @@ const physicsCar = () => {
   });
 
   const axisWidth = 0.5;
-  const wheelBody1 = addWheel(vehicle, { x: -1, z: 1 }, axisWidth);
-  const wheelBody2 = addWheel(vehicle, { x: -1, z: -1 }, axisWidth);
-  const wheelBody3 = addWheel(vehicle, { x: 1, z: -1 }, axisWidth);
-  const wheelBody4 = addWheel(vehicle, { x: 1, z: 1 }, axisWidth);
+  const wheelBody1 = addWheel(vehicle, { x: -0.7, z: 0.7 }, axisWidth);
+  const wheelBody2 = addWheel(vehicle, { x: -0.7, z: -0.7 }, axisWidth);
+  const wheelBody3 = addWheel(vehicle, { x: 0.7, z: -0.7 }, axisWidth);
+  const wheelBody4 = addWheel(vehicle, { x: 0.7, z: 0.7 }, axisWidth);
 
   return { vehicle, wheelBody1, wheelBody2, wheelBody3, wheelBody4 };
 };
@@ -308,7 +308,7 @@ miniMapCamera.lookAt(0, 0, 0);
 // CAMERA FOLLOW LOGIC (Chase View)
 // Updated CAMERA FOLLOW LOGIC (Stable Side View)
 const cameraOffset = new THREE.Vector3(-3, 2, 0); // Position to the side of the car
-const smoothFactor = 0.2; // Factor for smooth camera follow
+const smoothFactor = 0.4; // Factor for smooth camera follow
 const fixedCameraY = 2; // Fixed height for the camera
 
 // const smoothCameraFollow = (camera, car) => {
@@ -1053,6 +1053,7 @@ const create3DEnvironment = async () => {
 
   const cannonDebugger = new CannonDebugger(scene, physicsWorld);
   const time = new Time(100, vehicle);
+  enableInputControls(vehicle);
   time.startTime();
 
   const waypoints = [
@@ -1094,7 +1095,7 @@ const create3DEnvironment = async () => {
   const animate = () => {
     window.requestAnimationFrame(animate);
     physicsWorld.fixedStep();
-    cannonDebugger.update();
+    //cannonDebugger.update();
     car.position.copy(vehicle.chassisBody.position);
     car.quaternion.copy(vehicle.chassisBody.quaternion);
     controls.update();
@@ -1108,14 +1109,6 @@ const create3DEnvironment = async () => {
       velocity.x *= 1 - frictionCoefficient;
       velocity.z *= 1 - frictionCoefficient;
     }
-
-    // Enable or disable input controls based on time state
-    if (time.state === "running") {
-      enableInputControls(vehicle);
-    } else {
-      disableInputControls(vehicle);
-    }
-    console.log("Car: ", car);
     const boundingBox = new THREE.Box3().setFromObject(car);
     const finishBox = new THREE.Box3().setFromObject(finish);
     if (boundingBox.intersectsBox(finishBox)) {

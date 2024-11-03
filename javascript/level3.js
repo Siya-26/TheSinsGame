@@ -204,7 +204,7 @@ const addWheel = (vehicle, position, axisWidth) => {
 const physicsCar = () => {
     const carBody = new CANNON.Body({
         mass: 20,
-        shape: new CANNON.Box(new CANNON.Vec3(1, 0.05, 0.5)),
+        shape: new CANNON.Box(new CANNON.Vec3(0.7, 0.05, 0.4)),
         position: new CANNON.Vec3(40, 0.1, 27.25),
     });
 
@@ -213,10 +213,10 @@ const physicsCar = () => {
     });
 
     const axisWidth = 0.5;
-    const wheelBody1 = addWheel(vehicle, { x: -1, z: 1 }, axisWidth);
-    const wheelBody2 = addWheel(vehicle, { x: -1, z: -1 }, axisWidth);
-    const wheelBody3 = addWheel(vehicle, { x: 1, z: -1 }, axisWidth);
-    const wheelBody4 = addWheel(vehicle, { x: 1, z: 1 }, axisWidth);
+    const wheelBody1 = addWheel(vehicle, { x: -0.7, z: 0.7 }, axisWidth);
+    const wheelBody2 = addWheel(vehicle, { x: -0.7, z: -0.7 }, axisWidth);
+    const wheelBody3 = addWheel(vehicle, { x: 0.7, z: -0.7 }, axisWidth);
+    const wheelBody4 = addWheel(vehicle, { x: 0.7, z: 0.7 }, axisWidth);
 
     return { vehicle, wheelBody1, wheelBody2, wheelBody3, wheelBody4 };
 };
@@ -389,7 +389,7 @@ const updateObstacles1 = (obstacles1) => {
 
 // CAMERA FOLLOW LOGIC (Chase View)
 const cameraOffset = new THREE.Vector3(-3, 2, 0); // Position to the side of the car
-const smoothFactor = 0.2; // Factor for smooth camera follow
+const smoothFactor = 0.4; // Factor for smooth camera follow
 const fixedCameraY = 2; // Fixed height for the camera
 
 
@@ -706,6 +706,7 @@ const create3DEnvironment = async () => {
     //const cannonDebugger = new CannonDebugger(scene, physicsWorld);
     const time = new Time(100000000000, vehicle);
     time.startTime();
+    enableInputControls(vehicle);
 
   const waypoints = [
     new THREE.Vector3(0, 0, 0),
@@ -764,12 +765,6 @@ const animate = () => {
         velocity.z *= (1 - frictionCoefficient);
     }
 
-    // Enable or disable input controls based on time state
-    if (time.state === "running") {
-        enableInputControls(vehicle);
-      } else {
-        disableInputControls(vehicle);
-      }
       const boundingBox = new THREE.Box3().setFromObject(car);
       const finishBox = new THREE.Box3().setFromObject(finish);
       if (boundingBox.intersectsBox(finishBox)) {
