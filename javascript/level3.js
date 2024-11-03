@@ -677,7 +677,7 @@ const create3DEnvironment = async () => {
     track.material[5].emissive = 0xffffff;
     const t = model.children[0].children[7];
     boundaries(t.geometry.attributes.position.array);
-    const finish = finishPlane();
+    const finish = finishPlane(45, 0.1, 27.5);
     finish.receiveShadow=true;
     scene.add(finish);
 
@@ -770,10 +770,10 @@ const animate = () => {
       } else {
         disableInputControls(vehicle);
       }
-      console.log("Car: ", car);
       const boundingBox = new THREE.Box3().setFromObject(car);
       const finishBox = new THREE.Box3().setFromObject(finish);
       if (boundingBox.intersectsBox(finishBox)) {
+        console.log('crossed finish line');
         time.state = "stopped";
       }
     

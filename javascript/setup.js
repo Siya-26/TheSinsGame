@@ -1,9 +1,8 @@
-let trackSelected = false;
+let levelSelected = false;
 let carSelected = false;
-let modeSelected = false;
 
 const selections = {
-  track: "",
+  level: "",
   car: "",
   mode: "",
 };
@@ -26,12 +25,12 @@ document.addEventListener("keydown", (event) => {
 });
 
 // Select track
-function selectTrack(trackName) {
-  console.log("Track selected:", trackName);
-  selections.track = trackName;
-  setSelection("track", trackName);
-  trackSelected = true;
-  document.getElementById("track-selection").classList.add("hidden");
+function selectLevel(level) {
+  console.log("Level selected:", level);
+  selections.level = level;
+  setSelection("level", level);
+  levelSelected = true;
+  document.getElementById("level-selection").classList.add("hidden");
   document.getElementById("car-selection").classList.remove("hidden");
 }
 
@@ -57,10 +56,17 @@ function selectMode(modeName) {
 
 // Start game
 function startGame() {
-  if (trackSelected && carSelected && modeSelected) {
-    localStorage.setItem("selections", JSON.stringify(selections));
+  if (levelSelected && carSelected) {
     // Redirect to the game (race.html for now)
-    window.location.href = "level1.html"; // Replace with your game page
+    if(selections.level == "Level 1"){
+      window.location.href = "level1.html"; // Replace with your game page
+    }
+    else if(selections.level == "Level 2"){
+      window.location.href = "level2.html"; // Replace with your game page
+    }
+    else if(selections.level == "Level 3"){
+      window.location.href = "level3.html"; // Replace with your game page
+    }
   }
 }
 
