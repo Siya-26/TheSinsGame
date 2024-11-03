@@ -527,7 +527,7 @@ const smoothCameraFollow = (camera, car) => {
       .add(carRight.clone().multiplyScalar(firstPersonOffset.x))
       .setY(car.position.y + 0.5);
 
-    camera.position.lerp(new THREE.Vector3(car.position.x, car.position.y + 0.5, car.position.z), smoothFactor);
+    camera.position.lerp(new THREE.Vector3(car.position.x, car.position.y + 0.7, car.position.z), smoothFactor);
     camera.lookAt(targetPosition);
   } else {
     // 3rd person view: Chase view logic

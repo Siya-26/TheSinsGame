@@ -595,28 +595,37 @@ let isFirstPerson = false; // Start with 3rd person by default
 const thirdPersonOffset = new THREE.Vector3(-3, 2, 0); // Third-person view (chase view)
 const firstPersonOffset = new THREE.Vector3(1, 1, 0); // First-person view (inside car)
 
-// SMOOTH CAMERA FOLLOW FUNCTION (Updated to support both views)
 const smoothCameraFollow = (camera, car) => {
-    if (isFirstPerson) {
-        // 1st person view: Position camera inside the car
-        const targetPosition = car.position.clone().add(firstPersonOffset);
-        camera.position.lerp(targetPosition, smoothFactor);
-    } else {
-        // 3rd person view: Chase view logic
-        const carDirection = new THREE.Vector3();
-        car.getWorldDirection(carDirection); // Get the car's forward direction
-        const carRight = new THREE.Vector3().crossVectors(carDirection, new THREE.Vector3(0, 1, 0)).normalize(); // Get the right direction of the car
-        
-        const targetPosition = car.position
-            .clone()
-            .add(carRight.clone().multiplyScalar(thirdPersonOffset.x)) // Move to the side
-            .setY(fixedCameraY); // Set a fixed height for the camera
+  if (isFirstPerson) {
+    const carDirection = new THREE.Vector3();
+    car.getWorldDirection(carDirection);
+    const carRight = new THREE.Vector3()
+      .crossVectors(carDirection, new THREE.Vector3(0, 1, 0))
+      .normalize();
 
-        camera.position.lerp(targetPosition, smoothFactor);
-    }
+    const targetPosition = car.position
+      .clone()
+      .add(carRight.clone().multiplyScalar(firstPersonOffset.x))
+      .setY(car.position.y + 0.5);
 
-    // Always make the camera look at the car
+    camera.position.lerp(new THREE.Vector3(car.position.x, car.position.y + 0.7, car.position.z), smoothFactor);
+    camera.lookAt(targetPosition);
+  } else {
+    // 3rd person view: Chase view logic
+    const carDirection = new THREE.Vector3();
+    car.getWorldDirection(carDirection); // Get the car's forward direction
+    const carRight = new THREE.Vector3()
+      .crossVectors(carDirection, new THREE.Vector3(0, 1, 0))
+      .normalize(); // Get the right direction of the car
+
+    const targetPosition = car.position
+      .clone()
+      .add(carRight.clone().multiplyScalar(thirdPersonOffset.x)) // Move to the side
+      .setY(fixedCameraY); // Set a fixed height for the camera
+
+    camera.position.lerp(targetPosition, smoothFactor);
     camera.lookAt(car.position);
+  }
 };
 
 // TOGGLE CAMERA VIEW ON 'P' KEY PRESS
