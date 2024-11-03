@@ -1,11 +1,9 @@
-import * as THREE from 'three';
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
-import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader.js';
-import * as CANNON from 'cannon-es';
-import CannonDebugger from 'cannon-es-debugger';
-import { texture } from 'three/webgpu';
-import { Reflector } from 'three/examples/jsm/objects/Reflector.js';
+import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.118/build/three.module.js';
+import * as CANNON from "../cannon-es/dist/cannon-es.js";
+import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.118/examples/jsm/controls/OrbitControls.js';
+import { GLTFLoader } from 'https://cdn.jsdelivr.net/npm/three@0.118.1/examples/jsm/loaders/GLTFLoader.js';
+import { FBXLoader } from 'https://cdn.jsdelivr.net/npm/three@0.118.1/examples/jsm/loaders/FBXLoader.js';
+import { Reflector } from 'https://cdn.jsdelivr.net/npm/three@0.118.1/examples/jsm/objects/Reflector.js';
 
 const selections = JSON.parse(sessionStorage.getItem("selections"));
 console.log("Selections: ", selections.car);
@@ -26,10 +24,10 @@ class Time {
     if (this.time === 0 && this.state === "running") {
       clearInterval(this.timerInterval); // Stop the timer
       this.state = "stopped"; // Update the state
-      window.location.href = "lostScreen1.html"; // Redirect to lost screen
+      window.location.href = "lostScreen3.html"; // Redirect to lost screen
     } else if (this.time != 0 && this.state === "stopped") {
       clearInterval(this.countdownInterval);
-      window.location.href = "../html/winScreen1.html";
+      window.location.href = "../html/winScreen3.html";
     }
   }
 
@@ -38,12 +36,14 @@ class Time {
       this.state = "paused";
       clearInterval(this.timerInterval);
       document.getElementById("countdown").innerHTML = `
-        <button onclick="window.location.href='level1.html'">Restart</button>
+        <button onclick="window.location.href='level3.html'">Restart</button>
         <button onclick="window.location.href='mainMenu.html'">Cancel</button>
       `;
+      document.getElementById('pauseButton').innerHTML = '▶️';
     }
     else{
       document.getElementById("countdown").innerHTML = "";
+      document.getElementById('pauseButton').innerHTML = '⏸️';
     }
   }
 
@@ -795,16 +795,17 @@ const renderMiniMap = () => {
 // Inside your animate function, after updating the car's position:
 const animate = () => {
     window.requestAnimationFrame(animate);
-    physicsWorld.fixedStep();
-    //cannonDebugger.update();
-    car.position.copy(vehicle.chassisBody.position);
-    car.quaternion.copy(vehicle.chassisBody.quaternion);
-    controls.update();
-    updateObstacles(obstacles); // Update obstacles
-    updateObstacles1(obstacles1); 
-   // updateObstacles2(obstacles2); 
-
-    // Check car's position against waypoints
+    if(time.isPaused){
+      physicsWorld.step(1 / 60);
+      renderer.render(scene, camera);
+    }
+    else{
+      physicsWorld.fixedStep();
+      //cannonDebugger.update();
+      car.position.copy(vehicle.chassisBody.position);
+      car.quaternion.copy(vehicle.chassisBody.quaternion);
+      controls.update();
+    }
     checkWaypointProgress(car.position);
 
     // Existing friction handling
