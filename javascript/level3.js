@@ -745,7 +745,7 @@ const create3DEnvironment = async () => {
     //const obstacles2 = createObstacles2(scene, physicsWorld);
 
     //const cannonDebugger = new CannonDebugger(scene, physicsWorld);
-    const time = new Time(100000000000, vehicle);
+    const time = new Time(75, vehicle);
     time.startTime();
     document.getElementById("pauseButton").onclick = function togglePause() {
       console.log("CLICKED!");

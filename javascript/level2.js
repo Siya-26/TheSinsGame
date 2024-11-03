@@ -1092,7 +1092,7 @@ const create3DEnvironment = async () => {
   scene.add(spotlight);
 
   const cannonDebugger = new CannonDebugger(scene, physicsWorld);
-  const time = new Time(100, vehicle);
+  const time = new Time(75, vehicle);
   document.getElementById("pauseButton").onclick = function togglePause() {
     console.log("CLICKED!");
     isPaused = !isPaused;
