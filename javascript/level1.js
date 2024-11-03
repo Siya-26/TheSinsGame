@@ -1,10 +1,8 @@
-import * as THREE from "three";
-import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
-import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
-import { FBXLoader } from "three/examples/jsm/loaders/FBXLoader.js";
-import * as CANNON from "cannon-es";
-import CannonDebugger from "cannon-es-debugger";
-import { ThreeMFLoader } from "three/examples/jsm/Addons.js";
+import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.118/build/three.module.js';
+import * as CANNON from "../cannon-es/dist/cannon-es.js";
+import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.118/examples/jsm/controls/OrbitControls.js';
+import { GLTFLoader } from 'https://cdn.jsdelivr.net/npm/three@0.118.1/examples/jsm/loaders/GLTFLoader.js';
+import { FBXLoader } from 'https://cdn.jsdelivr.net/npm/three@0.118.1/examples/jsm/loaders/FBXLoader.js';
 const selections = JSON.parse(sessionStorage.getItem("selections"));
 
 class Time {
@@ -39,9 +37,11 @@ class Time {
                 <button onclick="window.location.href='level1.html'">Try Again</button>
                 <button onclick="window.location.href='mainMenu.html'">Cancel</button>
         </div>`;
+      document.getElementById('pauseButton').innerHTML = '▶️';
     }
     else{
       document.getElementById("countdown").innerHTML = "";
+      document.getElementById('pauseButton').innerHTML = '⏸️';
     }
   }
 
@@ -360,7 +360,7 @@ const buildPlane = () => {
 
   const material = new THREE.MeshStandardMaterial({
     map: gravelTexture,
-    roughness: 0,
+    roughness: 0.6,
     metalness: 0.1,
   });
 
@@ -383,8 +383,8 @@ const finishPlane = (x, y, z) => {
   const material = new THREE.MeshStandardMaterial({
     map: gravelTexture,
     color: 0xffffff,
-    roughness: 0.3,
-    metalness: 0.6,
+    roughness: 0.5,
+    metalness: 0.4,
   });
   const plane = new THREE.Mesh(geometry, material);
   plane.position.set(x, y, z);
@@ -878,7 +878,7 @@ const create3DEnvironment = async () => {
   sunLight.castShadow = true;
   scene.add(sunLight);
 
-  const spotlight = new THREE.SpotLight(0x8888ff, 0.5);
+  const spotlight = new THREE.SpotLight(0xffa500, 0.5);
   spotlight.position.set(80, 80, 80);
   spotlight.castShadow = true;
   scene.add(spotlight);
@@ -897,7 +897,6 @@ const create3DEnvironment = async () => {
   car.receiveShadow = true; // Optionally allow the car to receive shadows
   scene.add(car);
 
-  const cannonDebugger = new CannonDebugger(scene, physicsWorld);
   const time = new Time(100, vehicle);
   document.getElementById("pauseButton").onclick = function togglePause() {
     console.log("CLICKED!");

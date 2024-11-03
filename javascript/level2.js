@@ -1,9 +1,8 @@
-import * as THREE from "three";
-import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
-import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
-import { FBXLoader } from "three/examples/jsm/loaders/FBXLoader.js";
-import * as CANNON from "cannon-es";
-import CannonDebugger from "cannon-es-debugger";
+import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.118/build/three.module.js';
+import * as CANNON from "../cannon-es/dist/cannon-es.js";
+import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.118/examples/jsm/controls/OrbitControls.js';
+import { GLTFLoader } from 'https://cdn.jsdelivr.net/npm/three@0.118.1/examples/jsm/loaders/GLTFLoader.js';
+import { FBXLoader } from 'https://cdn.jsdelivr.net/npm/three@0.118.1/examples/jsm/loaders/FBXLoader.js';
 
 const selections = JSON.parse(sessionStorage.getItem("selections"));
 console.log("Selections: ", selections.car);
@@ -36,12 +35,14 @@ class Time {
       this.state = "paused";
       clearInterval(this.timerInterval);
       document.getElementById("countdown").innerHTML = `
-        <button onclick="window.location.href='level1.html'">Restart</button>
+        <button onclick="window.location.href='level2.html'">Restart</button>
         <button onclick="window.location.href='mainMenu.html'">Cancel</button>
       `;
+      document.getElementById('pauseButton').innerHTML = '▶️';
     }
     else{
       document.getElementById("countdown").innerHTML = "";
+      document.getElementById('pauseButton').innerHTML = '⏸️';
     }
   }
 
@@ -1090,7 +1091,6 @@ const create3DEnvironment = async () => {
   spotlight.distance = 50;
   scene.add(spotlight);
 
-  const cannonDebugger = new CannonDebugger(scene, physicsWorld);
   const time = new Time(75, vehicle);
   document.getElementById("pauseButton").onclick = function togglePause() {
     console.log("CLICKED!");
@@ -1138,13 +1138,17 @@ const create3DEnvironment = async () => {
   // Inside your animate function, after updating the car's position:
   const animate = () => {
     window.requestAnimationFrame(animate);
-    physicsWorld.fixedStep();
-    //cannonDebugger.update();
-    car.position.copy(vehicle.chassisBody.position);
-    car.quaternion.copy(vehicle.chassisBody.quaternion);
-    controls.update();
-
-    // Check car's position against waypoints
+    if(time.isPaused){
+      physicsWorld.step(1 / 60);
+      renderer.render(scene, camera);
+    }
+    else{
+      physicsWorld.fixedStep();
+      //cannonDebugger.update();
+      car.position.copy(vehicle.chassisBody.position);
+      car.quaternion.copy(vehicle.chassisBody.quaternion);
+      controls.update();
+    }
     checkWaypointProgress(car.position);
 
     // Existing friction handling
