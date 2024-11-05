@@ -1,4 +1,4 @@
 # TheSinsGame
 
 Link to video
-https://youtu.be/l1yx_KELPkU
+https://youtu.be/PaNOzZ-PsoA
